@@ -1,0 +1,114 @@
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: #e5e5e5;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.08); }
+}
+
+@keyframes logoZoomIn {
+  0%   { transform: scale(0.05); opacity: 0; }
+  50%  { opacity: 1; }
+  75%  { transform: scale(1.04); }
+  90%  { transform: scale(0.98); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fadeSlideUp {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeSlideUp2 {
+  0% { opacity: 0; transform: translateY(40px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeSlideUp3 {
+  0% { opacity: 0; transform: translateY(50px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes btnPop {
+  0% { opacity: 0; transform: scale(0.7); }
+  70% { transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.welcome-logo {
+  animation: logoZoomIn 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.welcome-subtitle {
+  animation: fadeSlideUp 0.7s ease forwards;
+  animation-delay: 1.8s;
+  opacity: 0;
+}
+
+.welcome-title {
+  animation: fadeSlideUp2 0.7s ease forwards;
+  animation-delay: 2.0s;
+  opacity: 0;
+}
+
+.welcome-tagline {
+  animation: fadeSlideUp3 0.7s ease forwards;
+  animation-delay: 2.2s;
+  opacity: 0;
+}
+
+.welcome-btn {
+  animation: btnPop 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: 2.5s;
+  opacity: 0;
+}
+
+.welcome-footer {
+  animation: fadeIn 0.6s ease forwards;
+  animation-delay: 2.9s;
+  opacity: 0;
+}
+
+/* Login Page Animations */
+.login-logo {
+  animation: logoZoomIn 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.login-text {
+  animation: fadeSlideUp 0.8s ease forwards;
+  animation-delay: 0.6s;
+  opacity: 0;
+}
+
+.login-badges {
+  animation: fadeSlideUp2 0.8s ease forwards;
+  animation-delay: 1s;
+  opacity: 0;
+}
+
+.login-footer-left {
+  animation: fadeIn 0.8s ease forwards;
+  animation-delay: 1.3s;
+  opacity: 0;
+}
+
+.login-form {
+  animation: fadeSlideUp 0.7s ease forwards;
+  animation-delay: 0.2s;
+  opacity: 0;
+}
