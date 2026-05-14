@@ -78,7 +78,7 @@ const SpecialDutyOfficers = () => {
           <Box bg="#856404" p={2} borderRadius="sm"><Star size={20} color="white" /></Box>
           <Box>
             <Text fontSize={{ base: '16px', md: '20px' }} fontWeight="700" color="gray.700">
-              प्रतिनियुक्त अधिकारी
+              स्थानांतरितअधिकारी
             </Text>
             <Text fontSize="12px" color="gray.500">विशेष ड्यूटी (Special Duty) पर तैनात अधिकारी</Text>
           </Box>
@@ -102,7 +102,7 @@ const SpecialDutyOfficers = () => {
       {filtered.length === 0 ? (
         <Box bg="white" borderRadius="sm" p={10} textAlign="center" boxShadow="sm">
           <Star size={32} color="#ccc" style={{ margin: '0 auto 8px' }} />
-          <Text color="gray.500" fontWeight="600">कोई प्रतिनियुक्त अधिकारी नहीं</Text>
+          <Text color="gray.500" fontWeight="600">कोई स्थानांतरितअधिकारी नहीं</Text>
           <Text color="gray.400" fontSize="13px">कोई भी अधिकारी अभी विशेष ड्यूटी पर नहीं है</Text>
         </Box>
       ) : (
@@ -166,7 +166,7 @@ const SpecialDutyOfficers = () => {
                 <Button size="sm" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
                   onClick={() => { setRemarkText(''); setRemoveConfirm({ open: true, item }); }}
                   borderRadius="4px" fontSize="12px" flex="1">
-                  <UserX size={12} style={{ marginRight: 4 }} /> हटाएं
+                  <UserX size={12} style={{ marginRight: 4 }} /> डिलीट
                 </Button>
                 <Button size="sm" bg="#856404" color="white" _hover={{ bg: '#6b4f03' }}
                   onClick={() => { setRemarkText(''); setCompleteConfirm({ open: true, item }); }}
@@ -178,14 +178,14 @@ const SpecialDutyOfficers = () => {
           ))}
         </SimpleGrid>
       )}
-      <Box mt={3}><Text fontSize="12px" color="gray.500">कुल {filtered.length} प्रतिनियुक्त अधिकारी</Text></Box>
+      <Box mt={3}><Text fontSize="12px" color="gray.500">कुल {filtered.length} स्थानांतरितअधिकारी</Text></Box>
 
       <ConfirmDialog isOpen={removeConfirm.open}
         onClose={() => setRemoveConfirm({ open: false, item: null })}
         onConfirm={handleRemove} loading={saving} type="warning"
-        title="विशेष ड्यूटी से हटाएं"
+        title="विशेष ड्यूटी से डिलीट"
         message={`क्या आप "${removeConfirm.item?.user?.name}" को विशेष ड्यूटी "${removeConfirm.item?.duty?.title}" से हटाना चाहते हैं?`}
-        confirmText="हाँ, हटाएं" cancelText="नहीं, रहने दें" />
+        confirmText="हाँ, डिलीट" cancelText="नहीं, रहने दें" />
 
       <ConfirmDialog isOpen={completeConfirm.open}
         onClose={() => setCompleteConfirm({ open: false, item: null })}

@@ -76,7 +76,7 @@ const DutyHistory = () => {
           </select>
           {selectedUser && (
             <Button size="sm" variant="outline" onClick={() => handleUserFilter('')} fontSize="13px">
-              फ़िल्टर हटाएं ✕
+              फ़िल्टर डिलीट ✕
             </Button>
           )}
         </Flex>

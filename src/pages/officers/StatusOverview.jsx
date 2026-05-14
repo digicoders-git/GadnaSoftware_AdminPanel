@@ -6,6 +6,7 @@ import {
   Users, UserCheck, MapPin, Umbrella, Star, RefreshCw,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import { getUserStatusOverview } from '../../api/services';
 import PageHeader from '../../components/PageHeader';
 
@@ -17,6 +18,7 @@ const DUTY_TYPE_HINDI = {
 const StatusOverview = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const fetchData = async () => {
     setLoading(true);
@@ -66,10 +68,10 @@ const StatusOverview = () => {
 
       {/* Summary Cards */}
       <SimpleGrid columns={{ base: 2, md: 4 }} gap={{ base: 3, md: 4 }} mb={6}>
-        <SummaryCard icon={Users} label="कुल अधिकारी" value={data?.totalUsers || 0} color="#090884" />
-        <SummaryCard icon={UserCheck} label="उपलब्ध" value={summary.available || 0} color="#090884" />
-        <SummaryCard icon={MapPin} label="ड्यूटी पर" value={summary.onDuty || 0} color="#fe0808" />
-        <SummaryCard icon={Umbrella} label="छुट्टी पर" value={summary.onHoliday || 0} color="#fe0808" />
+        <SummaryCard icon={Users} label="कुल अधिकारी" value={data?.totalUsers || 0} color="#090884" onClick={() => navigate('/stats/active-officers')} />
+        <SummaryCard icon={UserCheck} label="उपलब्ध" value={summary.available || 0} color="#22c55e" onClick={() => navigate('/stats/available')} />
+        <SummaryCard icon={MapPin} label="ड्यूटी पर" value={summary.onDuty || 0} color="#090884" onClick={() => navigate('/duties')} />
+        <SummaryCard icon={Umbrella} label="छुट्टी पर" value={summary.onHoliday || 0} color="#fe0808" onClick={() => navigate('/stats/on-holiday')} />
       </SimpleGrid>
 
       {/* Tabs */}
@@ -79,7 +81,7 @@ const StatusOverview = () => {
             <Tabs.List borderBottom="none" gap={0} flexWrap="nowrap" minW="max-content">
               <TabBtn value="available" label={`उपलब्ध (${summary.available || 0})`} color="#090884" />
               <TabBtn value="duty" label={`ड्यूटी पर (${summary.onDuty || 0})`} color="#fe0808" />
-              <TabBtn value="deputed" label={`प्रतिनियुक्त (${summary.deputed || 0})`} color="#fe0808" />
+              <TabBtn value="deputed" label={`स्थानांतरित(${summary.deputed || 0})`} color="#fe0808" />
               <TabBtn value="holiday" label={`छुट्टी पर (${summary.onHoliday || 0})`} color="#fe0808" />
             </Tabs.List>
           </Box>
@@ -129,9 +131,9 @@ const StatusOverview = () => {
         <Tabs.Content value="deputed">
           <OfficerGrid
             officers={data?.deputed || []}
-            emptyMsg="कोई प्रतिनियुक्त अधिकारी नहीं"
+            emptyMsg="कोई स्थानांतरितअधिकारी नहीं"
             badgeColor="#fe0808"
-            badgeLabel="प्रतिनियुक्त"
+            badgeLabel="स्थानांतरित"
             borderColor="#fe0808"
             showDuty
           />
@@ -216,8 +218,12 @@ const OfficerGrid = ({ officers, emptyMsg, badgeColor, badgeLabel, borderColor, 
   );
 };
 
-const SummaryCard = ({ icon: Icon, label, value, color }) => (
-  <Flex bg="white" borderRadius="sm" boxShadow="sm" overflow="hidden" h="85px">
+const SummaryCard = ({ icon: Icon, label, value, color, onClick }) => (
+  <Flex bg="white" borderRadius="sm" boxShadow="sm" overflow="hidden" h="85px"
+    cursor="pointer" transition="all 0.2s"
+    _hover={{ boxShadow: 'lg', transform: 'translateY(-2px)' }}
+    onClick={onClick}
+  >
     <Flex bg={color} w={{ base: '60px', md: '70px' }} alignItems="center" justifyContent="center" flexShrink={0}>
       <Icon size={26} color="white" />
     </Flex>

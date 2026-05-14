@@ -24,7 +24,8 @@ const DUTY_TYPES = [
   { value: 'other', label: 'अन्य (Other)' },
 ];
 
-const emptyForm = { title: '', description: '', location: '', dutyType: 'patrol', startDate: '', endDate: '' };
+const emptyForm = { title: '', description: '', location: '' };
+const emptyAssignForm = { userId: '', dutyType: 'patrol', startDate: '', endDate: '', remarks: '' };
 
 const Duties = () => {
   const [duties, setDuties] = useState([]);
@@ -35,13 +36,13 @@ const Duties = () => {
   const [editing, setEditing] = useState(null);
   const [selectedDuty, setSelectedDuty] = useState(null);
   const [form, setForm] = useState(emptyForm);
-  const [assignForm, setAssignForm] = useState({ userId: '', remarks: '' });
+  const [assignForm, setAssignForm] = useState(emptyAssignForm);
   const [remarkText, setRemarkText] = useState('');
   const [unassignedUsers, setUnassignedUsers] = useState([]);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null, title: '' });
   const [deleting, setDeleting] = useState(false);
-  const [removeConfirm, setRemoveConfirm] = useState({ open: false, duty: null });
+
   const [completeConfirm, setCompleteConfirm] = useState({ open: false, duty: null });
 
   const fetchDuties = async () => {
@@ -61,18 +62,20 @@ const Duties = () => {
 
   const openEdit = (d) => {
     setEditing(d);
-    setForm({
-      title: d.title, description: d.description || '', location: d.location || '',
-      dutyType: d.dutyType, startDate: d.startDate?.slice(0, 16) || '', endDate: d.endDate?.slice(0, 16) || '',
-    });
+    setForm({ title: d.title, description: d.description || '', location: d.location || '' });
     setModalOpen(true);
   };
 
   const openAssign = async (duty) => {
     setSelectedDuty(duty);
-    setAssignForm({ userId: '', remarks: '' });
+    setAssignForm({
+      userId: '',
+      dutyType: duty.dutyType || 'patrol',
+      startDate: '',
+      endDate: '',
+      remarks: '',
+    });
     try {
-      // Backend returns: { totalUsers, totalUnassigned, unassignedUsers: [...] }
       const { data } = await getUnassignedUsers();
       setUnassignedUsers(data.unassignedUsers || []);
     } catch { toast.error('उपलब्ध अधिकारियों की सूची लोड नहीं हुई'); }
@@ -81,14 +84,7 @@ const Duties = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!form.title.trim()) {
-      toast.error('कृपया ड्यूटी का शीर्षक दर्ज करें');
-      return;
-    }
-    if (!form.startDate) {
-      toast.error('कृपया शुरू तारीख चुनें');
-      return;
-    }
+    if (!form.title.trim()) { toast.error('कृपया ड्यूटी का शीर्षक दर्ज करें'); return; }
     setSaving(true);
     try {
       if (editing) {
@@ -105,38 +101,26 @@ const Duties = () => {
 
   const handleAssign = async (e) => {
     e.preventDefault();
-    if (!assignForm.userId) {
-      toast.error('कृपया अधिकारी चुनें');
-      return;
-    }
+    if (!assignForm.userId) { toast.error('कृपया अधिकारी चुनें'); return; }
+    if (!assignForm.dutyType) { toast.error('कृपया ड्यूटी प्रकार चुनें'); return; }
+    if (!assignForm.startDate) { toast.error('कृपया शुरू तारीख चुनें'); return; }
     setSaving(true);
     try {
-      await assignDuty(selectedDuty._id, assignForm);
+      await assignDuty(selectedDuty._id, {
+        userId: assignForm.userId,
+        dutyType: assignForm.dutyType,
+        startDate: assignForm.startDate,
+        endDate: assignForm.endDate || undefined,
+        remarks: assignForm.remarks,
+      });
       const selectedOfficer = unassignedUsers.find(u => u._id === assignForm.userId);
-      if (selectedDuty.assignedTo) {
-        toast.success(`ड्यूटी "${selectedDuty.title}" को ${selectedOfficer?.name || 'नए अधिकारी'} को पुनः असाइन किया गया`);
-      } else {
-        toast.success(`ड्यूटी "${selectedDuty.title}" को ${selectedOfficer?.name || 'अधिकारी'} को सफलतापूर्वक असाइन किया गया`);
-      }
+      toast.success(`${selectedOfficer?.name || 'अधिकारी'} को ड्यूटी "${selectedDuty.title}" पर असाइन किया गया`);
       setAssignModal(false); fetchDuties();
     } catch (err) { toast.error(err.response?.data?.message || 'असाइन करने में समस्या हुई'); }
     finally { setSaving(false); }
   };
 
-  const askRemove = (duty) => {
-    setRemoveConfirm({ open: true, duty });
-    setRemarkText('');
-  };
 
-  const handleRemove = async () => {
-    setSaving(true);
-    try {
-      await removeDutyAssignment(removeConfirm.duty._id, { remarks: remarkText });
-      toast.success(`${removeConfirm.duty.assignedTo?.name} को ड्यूटी "${removeConfirm.duty.title}" से हटा दिया गया`);
-      setRemoveConfirm({ open: false, duty: null }); fetchDuties();
-    } catch (err) { toast.error(err.response?.data?.message || 'हटाने में समस्या हुई'); }
-    finally { setSaving(false); }
-  };
 
   const askComplete = (duty) => {
     setCompleteConfirm({ open: true, duty });
@@ -229,15 +213,23 @@ const Duties = () => {
                       <Badge bg={d.dutyType === 'special' ? '#fff3cd' : '#eeeeff'}
                         color={d.dutyType === 'special' ? '#856404' : '#090884'}
                         px={2} py={1} borderRadius="full" fontSize="11px">
-                        {d.dutyType === 'special' && '★ '}{DUTY_TYPES.find(t => t.value === d.dutyType)?.label || d.dutyType}
+                        {d.dutyType ? `${d.dutyType === 'special' ? '★ ' : ''}${DUTY_TYPES.find(t => t.value === d.dutyType)?.label || d.dutyType}` : '—'}
                       </Badge>
                     </Table.Cell>
                     <Table.Cell px={4} py={3}>
                       <Text fontSize="13px" color="gray.600">{d.location || '—'}</Text>
                     </Table.Cell>
                     <Table.Cell px={4} py={3}>
-                      {d.assignedTo
-                        ? <Text fontSize="13px" fontWeight="600" color="#090884">{d.assignedTo.name}</Text>
+                      {d.assignments && d.assignments.length > 0
+                        ? (
+                          <VStack align="flex-start" gap={1}>
+                            {d.assignments.map((a, idx) => (
+                              <Text key={idx} fontSize="13px" fontWeight="600" color="#090884">
+                                {a.user?.name || '—'}
+                              </Text>
+                            ))}
+                          </VStack>
+                        )
                         : <Text fontSize="12px" color="gray.400">असाइन नहीं</Text>}
                     </Table.Cell>
                     <Table.Cell px={4} py={3}>
@@ -248,7 +240,7 @@ const Duties = () => {
                     </Table.Cell>
                     <Table.Cell px={4} py={3}>
                       <ActionButtons d={d} openAssign={openAssign} openEdit={openEdit}
-                        askRemove={askRemove} askComplete={askComplete} askDelete={askDelete} />
+                        askComplete={askComplete} askDelete={askDelete} />
                     </Table.Cell>
                   </Table.Row>
                 ))
@@ -306,9 +298,13 @@ const Duties = () => {
                         <ClipboardList size={13} />
                         <Text fontSize="12px">ड्यूटी प्रकार</Text>
                       </HStack>
-                      <Badge bg="#eeeeff" color="#090884" px={2} py={0.5} borderRadius="full" fontSize="11px">
-                        {DUTY_TYPES.find(t => t.value === d.dutyType)?.label || d.dutyType}
-                      </Badge>
+                      {d.dutyType ? (
+                        <Badge bg="#eeeeff" color="#090884" px={2} py={0.5} borderRadius="full" fontSize="11px">
+                          {DUTY_TYPES.find(t => t.value === d.dutyType)?.label || d.dutyType}
+                        </Badge>
+                      ) : (
+                        <Text fontSize="12px" color="gray.400" fontStyle="italic">असाइन नहीं</Text>
+                      )}
                     </Flex>
                     {d.location && (
                       <>
@@ -322,8 +318,16 @@ const Duties = () => {
                     <Box h="1px" bg="gray.100" />
                     <Flex justifyContent="space-between" alignItems="center">
                       <HStack gap={2} color="gray.500"><User size={13} /><Text fontSize="12px">असाइन किया</Text></HStack>
-                      {d.assignedTo
-                        ? <Text fontSize="13px" fontWeight="700" color="#090884">{d.assignedTo.name}</Text>
+                      {d.assignments && d.assignments.length > 0
+                        ? (
+                          <VStack align="flex-end" gap={0.5}>
+                            {d.assignments.map((a, idx) => (
+                              <Text key={idx} fontSize="13px" fontWeight="700" color="#090884">
+                                {a.user?.name || '—'}
+                              </Text>
+                            ))}
+                          </VStack>
+                        )
                         : <Text fontSize="12px" color="gray.400" fontStyle="italic">असाइन नहीं</Text>}
                     </Flex>
                     {d.startDate && (
@@ -341,50 +345,37 @@ const Duties = () => {
                 {/* Action Buttons */}
                 <Box px={4} py={3} borderTop="1px solid" borderColor="gray.100">
                   <VStack gap={2}>
-                    {/* Special duty - assign blocked */}
-                    {d.dutyType === 'special' && d.status === 'active' && d.assignedTo && (
-                      <Box w="full" bg="#fff3cd" border="1px solid #856404" borderRadius="6px" px={3} py={2}>
-                        <Text fontSize="12px" color="#856404" fontWeight="600">
-                          ★ प्रतिनियुक्त — पुनः असाइन नहीं हो सकता
-                        </Text>
-                        <Text fontSize="11px" color="#856404">
-                          पहले इस विशेष ड्यूटी को समाप्त करें
-                        </Text>
-                      </Box>
-                    )}
-                    {/* Normal assign button - only for non-special or unassigned */}
-                    {(d.status === 'pending' || (d.status === 'active' && d.dutyType !== 'special')) && (
+                    {/* Assign button - always available for pending/active */}
+                    {(d.status === 'pending' || d.status === 'active') && (
                       <Button w="full" size="sm" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
                         onClick={() => openAssign(d)} borderRadius="6px" fontSize="13px" h="38px">
                         <UserCheck size={14} style={{ marginRight: 6 }} />
-                        {d.assignedTo ? 'पुनः असाइन करें' : 'असाइन करें'}
+                        {d.assignments && d.assignments.length > 0 ? 'और असाइन करें' : 'असाइन करें'}
                       </Button>
                     )}
-                    {d.status === 'active' && d.assignedTo && (
+                    {d.status === 'active' && d.assignments && d.assignments.length > 0 && (
+                      <Button w="full" size="sm" bg="#22c55e" color="white" _hover={{ bg: '#16a34a' }}
+                        onClick={() => askComplete(d)} borderRadius="6px" fontSize="13px" h="38px">
+                        <CheckCircle size={13} style={{ marginRight: 5 }} /> पूर्ण करें
+                      </Button>
+                    )}
+                    {d.status === 'pending' && (
                       <Flex gap={2} w="full">
-                        <Button flex={1} size="sm" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
-                          onClick={() => askRemove(d)} borderRadius="6px" fontSize="13px" h="38px">
-                          <UserX size={13} style={{ marginRight: 5 }} /> हटाएं
+                        <Button flex={1} size="sm" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
+                          onClick={() => openEdit(d)} borderRadius="6px" fontSize="13px" h="38px">
+                          <Pencil size={13} style={{ marginRight: 5 }} /> एडिट
                         </Button>
-                        <Button flex={1} size="sm" bg="#22c55e" color="white" _hover={{ bg: '#16a34a' }}
-                          onClick={() => askComplete(d)} borderRadius="6px" fontSize="13px" h="38px">
-                          <CheckCircle size={13} style={{ marginRight: 5 }} /> पूर्ण करें
+                        <Button flex={1} size="sm" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
+                          onClick={() => askDelete(d)} borderRadius="6px" fontSize="13px" h="38px">
+                          <Trash2 size={13} style={{ marginRight: 5 }} /> डिलीट
                         </Button>
                       </Flex>
                     )}
-                    {(d.status === 'pending' || d.status === 'completed' || d.status === 'cancelled') && (
-                      <Flex gap={2} w="full">
-                        {d.status === 'pending' && (
-                          <Button flex={1} size="sm" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
-                            onClick={() => openEdit(d)} borderRadius="6px" fontSize="13px" h="38px">
-                            <Pencil size={13} style={{ marginRight: 5 }} /> संपादित
-                          </Button>
-                        )}
-                        <Button flex={1} size="sm" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
-                          onClick={() => askDelete(d)} borderRadius="6px" fontSize="13px" h="38px">
-                          <Trash2 size={13} style={{ marginRight: 5 }} /> हटाएं
-                        </Button>
-                      </Flex>
+                    {(d.status === 'completed' || d.status === 'cancelled') && (
+                      <Button w="full" size="sm" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
+                        onClick={() => askDelete(d)} borderRadius="6px" fontSize="13px" h="38px">
+                        <Trash2 size={13} style={{ marginRight: 5 }} /> डिलीट
+                      </Button>
                     )}
                   </VStack>
                 </Box>
@@ -399,34 +390,32 @@ const Duties = () => {
 
       {/* Create/Edit Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}
-        title={editing ? 'ड्यूटी संपादित करें' : 'नई ड्यूटी बनाएं'}>
+        title={editing ? 'ड्यूटी एडिट करें' : 'नई ड्यूटी बनाएं'}>
         <form onSubmit={handleSave}>
           <VStack gap={4}>
             <FF label="ड्यूटी का शीर्षक *">
               <Input placeholder="जैसे: रात्रि गश्त" value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })} required fontSize="14px" />
+                onChange={(e) => setForm({ ...form, title: e.target.value })} required
+                fontSize="14px" h="48px" borderRadius="8px" border="1.5px solid" borderColor="gray.200"
+                bg="gray.50" px={4}
+                _focus={{ borderColor: '#090884', bg: 'white', boxShadow: '0 0 0 3px rgba(9,8,132,0.08)', outline: 'none' }}
+                transition="all 0.2s" />
             </FF>
             <FF label="विवरण">
               <Textarea placeholder="ड्यूटी का विवरण..." value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })} fontSize="14px" rows={2} />
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                fontSize="14px" rows={2} borderRadius="8px" border="1.5px solid" borderColor="gray.200"
+                bg="gray.50" px={4} py={3}
+                _focus={{ borderColor: '#090884', bg: 'white', boxShadow: '0 0 0 3px rgba(9,8,132,0.08)', outline: 'none' }}
+                transition="all 0.2s" />
             </FF>
             <FF label="स्थान">
               <Input placeholder="जैसे: सेक्टर 12" value={form.location}
-                onChange={(e) => setForm({ ...form, location: e.target.value })} fontSize="14px" />
-            </FF>
-            <FF label="ड्यूटी प्रकार *">
-              <select value={form.dutyType} onChange={(e) => setForm({ ...form, dutyType: e.target.value })}
-                style={selectStyle}>
-                {DUTY_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
-            </FF>
-            <FF label="शुरू तारीख *">
-              <Input type="datetime-local" value={form.startDate}
-                onChange={(e) => setForm({ ...form, startDate: e.target.value })} required fontSize="14px" />
-            </FF>
-            <FF label="समाप्ति तारीख">
-              <Input type="datetime-local" value={form.endDate}
-                onChange={(e) => setForm({ ...form, endDate: e.target.value })} fontSize="14px" />
+                onChange={(e) => setForm({ ...form, location: e.target.value })}
+                fontSize="14px" h="48px" borderRadius="8px" border="1.5px solid" borderColor="gray.200"
+                bg="gray.50" px={4}
+                _focus={{ borderColor: '#090884', bg: 'white', boxShadow: '0 0 0 3px rgba(9,8,132,0.08)', outline: 'none' }}
+                transition="all 0.2s" />
             </FF>
             <Flex gap={3} w="full" pt={2}
               flexDirection={{ base: 'column', sm: 'row' }}
@@ -454,25 +443,71 @@ const Duties = () => {
               {selectedDuty?.location && (
                 <Text fontSize="12px" color="gray.500">📍 {selectedDuty.location}</Text>
               )}
-              {selectedDuty?.assignedTo && (
-                <Text fontSize="12px" color="orange.500" mt={1}>
-                  ⚠️ वर्तमान में: {selectedDuty.assignedTo.name} — पुनः असाइन होगा
-                </Text>
+              {selectedDuty?.assignments && selectedDuty.assignments.length > 0 && (
+                <Box mt={1}>
+                  <Text fontSize="12px" color="gray.600" fontWeight="600">पहले से असाइन:</Text>
+                  {selectedDuty.assignments.map((a, idx) => (
+                    <Text key={idx} fontSize="11px" color="#090884">
+                      • {a.user?.name || '—'}
+                    </Text>
+                  ))}
+                </Box>
               )}
             </Box>
             <FF label="अधिकारी चुनें *">
               <select value={assignForm.userId}
                 onChange={(e) => setAssignForm({ ...assignForm, userId: e.target.value })}
-                required style={selectStyle}>
+                required style={{ width: '100%', height: '48px', padding: '0 12px', border: '1.5px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', outline: 'none', background: '#f7f8fa' }}>
                 <option value="">-- उपलब्ध अधिकारी चुनें --</option>
                 {unassignedUsers.map(u => (
                   <option key={u._id} value={u._id}>{u.name} — {u.pnoNumber} ({u.designation?.name})</option>
                 ))}
               </select>
+              {unassignedUsers.length === 0 ? (
+                <Box mt={2} p={3} bg="#fff3cd" borderRadius="6px" border="1px solid #856404">
+                  <Text fontSize="12px" color="#856404" fontWeight="600">
+                    ⚠️ कोई उपलब्ध अधिकारी नहीं है
+                  </Text>
+                  <Text fontSize="11px" color="#856404" mt={1}>
+                    सभी अधिकारी या तो ड्यूटी पर हैं या छुट्टी पर। पहले किसी की ड्यूटी पूर्ण करें।
+                  </Text>
+                </Box>
+              ) : (
+                <Text fontSize="11px" color="gray.500" mt={1}>
+                  ✅ {unassignedUsers.length} उपलब्ध अधिकारी
+                </Text>
+              )}
+            </FF>
+            <FF label="ड्यूटी प्रकार *">
+              <select value={assignForm.dutyType}
+                onChange={(e) => setAssignForm({ ...assignForm, dutyType: e.target.value })}
+                required style={{ width: '100%', height: '48px', padding: '0 12px', border: '1.5px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', outline: 'none', background: '#f7f8fa' }}>
+                {DUTY_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+            </FF>
+            <FF label="शुरू तारीख *">
+              <Input type="datetime-local" value={assignForm.startDate}
+                onChange={(e) => setAssignForm({ ...assignForm, startDate: e.target.value })} required
+                fontSize="14px" h="48px" borderRadius="8px" border="1.5px solid" borderColor="gray.200"
+                bg="gray.50" px={4}
+                _focus={{ borderColor: '#090884', bg: 'white', boxShadow: '0 0 0 3px rgba(9,8,132,0.08)', outline: 'none' }}
+                transition="all 0.2s" />
+            </FF>
+            <FF label="समाप्ति तारीख">
+              <Input type="datetime-local" value={assignForm.endDate}
+                onChange={(e) => setAssignForm({ ...assignForm, endDate: e.target.value })}
+                fontSize="14px" h="48px" borderRadius="8px" border="1.5px solid" borderColor="gray.200"
+                bg="gray.50" px={4}
+                _focus={{ borderColor: '#090884', bg: 'white', boxShadow: '0 0 0 3px rgba(9,8,132,0.08)', outline: 'none' }}
+                transition="all 0.2s" />
             </FF>
             <FF label="टिप्पणी">
               <Input placeholder="असाइनमेंट की टिप्पणी..." value={assignForm.remarks}
-                onChange={(e) => setAssignForm({ ...assignForm, remarks: e.target.value })} fontSize="14px" />
+                onChange={(e) => setAssignForm({ ...assignForm, remarks: e.target.value })}
+                fontSize="14px" h="48px" borderRadius="8px" border="1.5px solid" borderColor="gray.200"
+                bg="gray.50" px={4}
+                _focus={{ borderColor: '#090884', bg: 'white', boxShadow: '0 0 0 3px rgba(9,8,132,0.08)', outline: 'none' }}
+                transition="all 0.2s" />
             </FF>
             <Flex gap={3} w="full" pt={2}
               flexDirection={{ base: 'column', sm: 'row' }}
@@ -482,6 +517,7 @@ const Duties = () => {
                 bg="gray.100" color="gray.700" _hover={{ bg: 'gray.200' }}>रद्द करें</Button>
               <Button type="submit" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
                 loading={saving} loadingText="असाइन हो रहा है..." fontSize="14px"
+                isDisabled={unassignedUsers.length === 0}
                 w={{ base: 'full', sm: 'auto' }} h="40px" borderRadius="6px" px={5}>
                 असाइन करें
               </Button>
@@ -489,19 +525,6 @@ const Duties = () => {
           </VStack>
         </form>
       </Modal>
-
-      {/* Remove Assignment Confirm */}
-      <ConfirmDialog
-        isOpen={removeConfirm.open}
-        onClose={() => setRemoveConfirm({ open: false, duty: null })}
-        onConfirm={handleRemove}
-        loading={saving}
-        type="warning"
-        title="असाइनमेंट हटाएं"
-        message={`क्या आप सच में "${removeConfirm.duty?.assignedTo?.name}" को ड्यूटी "${removeConfirm.duty?.title}" से हटाना चाहते हैं? अधिकारी को ड्यूटी से मुक्त कर दिया जाएगा।`}
-        confirmText="हाँ, हटाएं"
-        cancelText="नहीं, रहने दें"
-      />
 
       {/* Complete Duty Confirm */}
       <ConfirmDialog
@@ -511,7 +534,7 @@ const Duties = () => {
         loading={saving}
         type="success"
         title="ड्यूटी पूर्ण करें"
-        message={`क्या आप पुष्टि करते हैं कि ड्यूटी "${completeConfirm.duty?.title}" पूर्ण हो गई है? अधिकारी "${completeConfirm.duty?.assignedTo?.name}" की ड्यूटी समाप्त हो जाएगी।`}
+        message={`क्या आप पुष्टि करते हैं कि ड्यूटी "${completeConfirm.duty?.title}" पूर्ण हो गई है? सभी असाइन किए गए अधिकारियों की ड्यूटी समाप्त हो जाएगी।`}
         confirmText="हाँ, पूर्ण करें"
         cancelText="नहीं, रहने दें"
       />
@@ -523,53 +546,40 @@ const Duties = () => {
         onConfirm={handleDelete}
         loading={deleting}
         type="danger"
-        title="ड्यूटी हटाएं"
+        title="ड्यूटी डिलीट"
         message={`क्या आप सच में "${deleteConfirm.title}" ड्यूटी को हटाना चाहते हैं? यह कार्रवाई वापस नहीं की जा सकती।`}
-        confirmText="हाँ, हटाएं"
+        confirmText="हाँ, डिलीट"
         cancelText="नहीं, रहने दें"
       />
     </Box>
   );
 };
 
-const ActionButtons = ({ d, openAssign, openEdit, askRemove, askComplete, askDelete }) => (
+const ActionButtons = ({ d, openAssign, openEdit, askComplete, askDelete }) => (
   <HStack gap={1} flexWrap="wrap">
-    {/* Special active duty - assign blocked */}
-    {d.dutyType === 'special' && d.status === 'active' && d.assignedTo ? (
-      <Badge bg="#fff3cd" color="#856404" px={2} py={1} borderRadius="4px" fontSize="10px">
-        ★ प्रतिनियुक्त
-      </Badge>
-    ) : (
-      (d.status === 'pending' || d.status === 'active') && (
-        <Button size="xs" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
-          onClick={() => openAssign(d)} borderRadius="4px" px={2} fontSize="11px">
-          <UserCheck size={11} style={{ marginRight: 3 }} />
-          {d.assignedTo ? 'पुनः' : 'असाइन'}
-        </Button>
-      )
+    {(d.status === 'pending' || d.status === 'active') && (
+      <Button size="xs" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
+        onClick={() => openAssign(d)} borderRadius="4px" px={2} fontSize="11px">
+        <UserCheck size={11} style={{ marginRight: 3 }} />
+        {d.assignments && d.assignments.length > 0 ? 'और' : 'असाइन'}
+      </Button>
     )}
-    {d.status === 'active' && d.assignedTo && (
-      <>
-        <Button size="xs" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
-          onClick={() => askRemove(d)} borderRadius="4px" px={2} fontSize="11px">
-          <UserX size={11} style={{ marginRight: 3 }} /> हटाएं
-        </Button>
-        <Button size="xs" bg="#22c55e" color="white" _hover={{ bg: '#16a34a' }}
-          onClick={() => askComplete(d)} borderRadius="4px" px={2} fontSize="11px">
-          <CheckCircle size={11} style={{ marginRight: 3 }} /> पूर्ण
-        </Button>
-      </>
+    {d.status === 'active' && d.assignments && d.assignments.length > 0 && (
+      <Button size="xs" bg="#22c55e" color="white" _hover={{ bg: '#16a34a' }}
+        onClick={() => askComplete(d)} borderRadius="4px" px={2} fontSize="11px">
+        <CheckCircle size={11} style={{ marginRight: 3 }} /> पूर्ण
+      </Button>
     )}
     {d.status === 'pending' && (
       <Button size="xs" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
         onClick={() => openEdit(d)} borderRadius="4px" px={2} fontSize="11px">
-        <Pencil size={11} style={{ marginRight: 3 }} /> संपादित
+        <Pencil size={11} style={{ marginRight: 3 }} /> एडिट
       </Button>
     )}
     {d.status !== 'active' && (
       <Button size="xs" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
         onClick={() => askDelete(d)} borderRadius="4px" px={2} fontSize="11px">
-        <Trash2 size={11} style={{ marginRight: 3 }} /> हटाएं
+        <Trash2 size={11} style={{ marginRight: 3 }} /> डिलीट
       </Button>
     )}
   </HStack>
@@ -587,7 +597,7 @@ const selectStyle = {
   borderRadius: '4px', fontSize: '14px', outline: 'none', background: 'white',
 };
 
-const statusHindi = (s) => ({ pending: 'प्रतीक्षित', active: 'सक्रिय', completed: 'पूर्ण', cancelled: 'रद्द' }[s] || s);
+const statusHindi = (s) => ({ pending: 'प्रतीक्षित', active: 'सक्रिय', completed: 'पूर्ण', cancelled: 'डिलीट' }[s] || s);
 const statusColor = (s) => ({
   pending: { bg: '#fff3cd', color: '#856404' },
   active: { bg: '#eeeeff', color: '#090884' },

@@ -11,7 +11,7 @@ const ConfirmDialog = ({
   title,
   message,
   confirmText = 'हाँ, करें',
-  cancelText = 'रद्द करें',
+  cancelText = 'डिलीट करें',
   type = 'danger',
   loading = false,
 }) => {

@@ -180,12 +180,12 @@ const Admins = () => {
                       <HStack gap={2}>
                         <Button size="xs" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
                           onClick={() => openEdit(a)} borderRadius="4px" px={3} fontSize="12px">
-                          <Pencil size={11} style={{ marginRight: 4 }} /> संपादित
+                          <Pencil size={11} style={{ marginRight: 4 }} /> एडिट
                         </Button>
                         {a._id !== currentAdmin?._id && (
                           <Button size="xs" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
                             onClick={() => askDelete(a)} borderRadius="4px" px={3} fontSize="12px">
-                            <Trash2 size={11} style={{ marginRight: 4 }} /> हटाएं
+                            <Trash2 size={11} style={{ marginRight: 4 }} /> डिलीट
                           </Button>
                         )}
                       </HStack>
@@ -249,12 +249,12 @@ const Admins = () => {
                   <Flex borderTop="1px solid" borderColor="gray.100" px={4} py={2} gap={2} justifyContent="flex-end">
                     <Button size="sm" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
                       onClick={() => openEdit(a)} borderRadius="4px" fontSize="13px">
-                      <Pencil size={13} style={{ marginRight: 4 }} /> संपादित करें
+                      <Pencil size={13} style={{ marginRight: 4 }} /> एडिट करें
                     </Button>
                     {a._id !== currentAdmin?._id && (
                       <Button size="sm" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
                         onClick={() => askDelete(a)} borderRadius="4px" fontSize="13px">
-                        <Trash2 size={13} style={{ marginRight: 4 }} /> हटाएं
+                        <Trash2 size={13} style={{ marginRight: 4 }} /> डिलीट
                       </Button>
                     )}
                   </Flex>
@@ -268,7 +268,7 @@ const Admins = () => {
 
       {/* Add/Edit Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}
-        title={editing ? `एडमिन संपादित करें — ${editing.name}` : 'नया एडमिन जोड़ें'}>
+        title={editing ? `एडमिन एडिट करें — ${editing.name}` : 'नया एडमिन जोड़ें'}>
         <form onSubmit={handleSave}>
           <VStack gap={4}>
             <FF label="पूरा नाम *">
@@ -313,9 +313,9 @@ const Admins = () => {
         onConfirm={handleDelete}
         loading={deleting}
         type="danger"
-        title="एडमिन हटाएं"
+        title="एडमिन डिलीट"
         message={`क्या आप सच में "${confirmState.name}" को हटाना चाहते हैं? यह कार्रवाई वापस नहीं की जा सकती।`}
-        confirmText="हाँ, हटाएं"
+        confirmText="हाँ, डिलीट"
         cancelText="नहीं, रहने दें"
       />
     </Box>

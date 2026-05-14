@@ -124,11 +124,11 @@ const Designations = () => {
                   <HStack gap={2}>
                     <Button size="xs" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
                       onClick={() => openEdit(d)} borderRadius="4px" px={3} fontSize="12px">
-                      <Pencil size={11} style={{ marginRight: 4 }} /> संपादित
+                      <Pencil size={11} style={{ marginRight: 4 }} /> एडिट
                     </Button>
                     <Button size="xs" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
                       onClick={() => askDelete(d)} borderRadius="4px" px={3} fontSize="12px">
-                      <Trash2 size={11} style={{ marginRight: 4 }} /> हटाएं
+                      <Trash2 size={11} style={{ marginRight: 4 }} /> डिलीट
                     </Button>
                   </HStack>
                 </Table.Cell>
@@ -175,11 +175,11 @@ const Designations = () => {
                   <Flex gap={2}>
                     <Button flex={1} size="sm" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
                       onClick={() => openEdit(d)} borderRadius="6px" fontSize="13px" h="38px">
-                      <Pencil size={13} style={{ marginRight: 5 }} /> संपादित करें
+                      <Pencil size={13} style={{ marginRight: 5 }} /> एडिट करें
                     </Button>
                     <Button flex={1} size="sm" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
                       onClick={() => askDelete(d)} borderRadius="6px" fontSize="13px" h="38px">
-                      <Trash2 size={13} style={{ marginRight: 5 }} /> हटाएं
+                      <Trash2 size={13} style={{ marginRight: 5 }} /> डिलीट
                     </Button>
                   </Flex>
                 </Box>
@@ -192,20 +192,24 @@ const Designations = () => {
 
       {/* Add/Edit Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}
-        title={editing ? `पदनाम संपादित करें — ${editing.name}` : 'नया पदनाम जोड़ें'}>
+        title={editing ? `पदनाम एडिट करें — ${editing.name}` : 'नया पदनाम जोड़ें'}>
         <form onSubmit={handleSave}>
           <VStack gap={4}>
             <Box w="full">
               <Text fontSize="13px" color="gray.600" mb={1} fontWeight="500">पदनाम का नाम *</Text>
               <Input placeholder="जैसे: Sub Inspector" value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })} required fontSize="14px" />
+                onChange={(e) => setForm({ ...form, name: e.target.value })} required
+                fontSize="14px" h="48px" borderRadius="8px" border="1.5px solid" borderColor="gray.200"
+                bg="gray.50" px={4}
+                _focus={{ borderColor: '#090884', bg: 'white', boxShadow: '0 0 0 3px rgba(9,8,132,0.08)', outline: 'none' }}
+                transition="all 0.2s" />
             </Box>
             {editing && (
               <Box w="full">
                 <Text fontSize="13px" color="gray.600" mb={1} fontWeight="500">स्थिति</Text>
                 <select value={form.isActive ? 'true' : 'false'}
                   onChange={(e) => setForm({ ...form, isActive: e.target.value === 'true' })}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '4px', fontSize: '14px', background: 'white' }}>
+                  style={{ width: '100%', height: '48px', padding: '0 12px', border: '1.5px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', background: '#f7f8fa', outline: 'none' }}>
                   <option value="true">सक्रिय</option>
                   <option value="false">निष्क्रिय</option>
                 </select>
@@ -233,9 +237,9 @@ const Designations = () => {
         onConfirm={handleDelete}
         loading={deleting}
         type="danger"
-        title="पदनाम हटाएं"
+        title="पदनाम डिलीट"
         message={`क्या आप सच में "${confirmState.name}" पदनाम को हटाना चाहते हैं? इस पदनाम से जुड़े अधिकारी प्रभावित हो सकते हैं।`}
-        confirmText="हाँ, हटाएं"
+        confirmText="हाँ, डिलीट"
         cancelText="नहीं, रहने दें"
       />
     </Box>

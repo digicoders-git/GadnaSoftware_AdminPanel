@@ -178,7 +178,7 @@ const OnDutyOfficers = () => {
                 <Button size="sm" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
                   onClick={() => { setRemarkText(''); setRemoveConfirm({ open: true, item }); }}
                   borderRadius="4px" fontSize="12px" flex="1">
-                  <UserX size={12} style={{ marginRight: 4 }} /> हटाएं
+                  <UserX size={12} style={{ marginRight: 4 }} /> डिलीट
                 </Button>
                 <Button size="sm" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
                   onClick={() => { setRemarkText(''); setCompleteConfirm({ open: true, item }); }}
@@ -196,9 +196,9 @@ const OnDutyOfficers = () => {
       <ConfirmDialog isOpen={removeConfirm.open}
         onClose={() => setRemoveConfirm({ open: false, item: null })}
         onConfirm={handleRemove} loading={saving} type="warning"
-        title="असाइनमेंट हटाएं"
+        title="असाइनमेंट डिलीट"
         message={`क्या आप "${removeConfirm.item?.user?.name}" को ड्यूटी "${removeConfirm.item?.duty?.title}" से हटाना चाहते हैं?`}
-        confirmText="हाँ, हटाएं" cancelText="नहीं, रहने दें" />
+        confirmText="हाँ, डिलीट" cancelText="नहीं, रहने दें" />
 
       {/* Complete Confirm */}
       <ConfirmDialog isOpen={completeConfirm.open}

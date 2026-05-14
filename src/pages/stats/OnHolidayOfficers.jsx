@@ -59,9 +59,9 @@ const OnHolidayOfficers = () => {
     setDeleting(true);
     try {
       await deleteHoliday(deleteConfirm.id);
-      toast.success(`${deleteConfirm.name} की छुट्टी रद्द कर दी गई`);
+      toast.success(`${deleteConfirm.name} की छुट्टी डिलीट कर दी गई`);
       setDeleteConfirm({ open: false, id: null, name: '' }); fetchData();
-    } catch (err) { toast.error(err.response?.data?.message || 'रद्द करने में समस्या हुई'); }
+    } catch (err) { toast.error(err.response?.data?.message || 'डिलीट करने में समस्या हुई'); }
     finally { setDeleting(false); }
   };
 
@@ -154,11 +154,11 @@ const OnHolidayOfficers = () => {
                 </Button>
                 <Button size="sm" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
                   onClick={() => openEdit(h)} borderRadius="4px" fontSize="12px" flex="1">
-                  <Pencil size={12} style={{ marginRight: 4 }} /> संपादित
+                  <Pencil size={12} style={{ marginRight: 4 }} /> एडिट
                 </Button>
                 <Button size="sm" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
                   onClick={() => askDelete(h)} borderRadius="4px" fontSize="12px" flex="1">
-                  <Trash2 size={12} style={{ marginRight: 4 }} /> रद्द करें
+                  <Trash2 size={12} style={{ marginRight: 4 }} /> डिलीट करें
                 </Button>
               </Flex>
             </Box>
@@ -168,7 +168,7 @@ const OnHolidayOfficers = () => {
       <Box mt={3}><Text fontSize="12px" color="gray.500">कुल {filtered.length} अधिकारी छुट्टी पर</Text></Box>
 
       {/* Edit Modal */}
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="छुट्टी संपादित करें">
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="छुट्टी एडिट करें">
         <form onSubmit={handleSave}>
           <VStack gap={4}>
             <Box w="full" p={3} bg="gray.50" borderRadius="sm" borderLeft="3px solid #fe0808">
@@ -195,9 +195,9 @@ const OnHolidayOfficers = () => {
       </Modal>
 
       <ConfirmDialog isOpen={deleteConfirm.open} onClose={() => setDeleteConfirm({ open: false, id: null, name: '' })}
-        onConfirm={handleDelete} loading={deleting} type="warning" title="छुट्टी रद्द करें"
-        message={`क्या आप सच में ${deleteConfirm.name} की छुट्टी रद्द करना चाहते हैं?`}
-        confirmText="हाँ, रद्द करें" cancelText="नहीं, रहने दें" />
+        onConfirm={handleDelete} loading={deleting} type="warning" title="छुट्टी डिलीट करें"
+        message={`क्या आप सच में ${deleteConfirm.name} की छुट्टी डिलीट करना चाहते हैं?`}
+        confirmText="हाँ, डिलीट करें" cancelText="नहीं, रहने दें" />
 
       {/* History Modal */}
       <Modal isOpen={historyModal} onClose={() => setHistoryModal(false)} title="ड्यूटी इतिहास">

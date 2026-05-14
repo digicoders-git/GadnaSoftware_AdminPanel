@@ -142,11 +142,11 @@ const ActiveOfficers = () => {
                       <ToggleSwitch isActive={u.isActive} onChange={() => handleToggle(u)} />
                       <Button size="xs" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
                         onClick={() => openEdit(u)} borderRadius="4px" px={3} fontSize="12px">
-                        <Pencil size={11} style={{ marginRight: 4 }} /> संपादित
+                        <Pencil size={11} style={{ marginRight: 4 }} /> एडिट
                       </Button>
                       <Button size="xs" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
                         onClick={() => askDelete(u)} borderRadius="4px" px={3} fontSize="12px">
-                        <Trash2 size={11} style={{ marginRight: 4 }} /> हटाएं
+                        <Trash2 size={11} style={{ marginRight: 4 }} /> डिलीट
                       </Button>
                     </HStack>
                   </Table.Cell>
@@ -192,17 +192,24 @@ const ActiveOfficers = () => {
                     <InfoRow icon={Phone} label="फोन" value={u.phoneNumber} />
                   </VStack>
                 </Box>
-                <Flex borderTop="1px solid" borderColor="gray.100" px={4} py={2} gap={2} justifyContent="flex-end" alignItems="center">
-                  <ToggleSwitch isActive={u.isActive} onChange={() => handleToggle(u)} />
-                  <Button size="sm" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
-                    onClick={() => openEdit(u)} borderRadius="4px" fontSize="13px">
-                    <Pencil size={13} style={{ marginRight: 4 }} /> संपादित करें
-                  </Button>
-                  <Button size="sm" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
-                    onClick={() => askDelete(u)} borderRadius="4px" fontSize="13px">
-                    <Trash2 size={13} style={{ marginRight: 4 }} /> हटाएं
-                  </Button>
-                </Flex>
+                <Box borderTop="1px solid" borderColor="gray.100" px={4} py={3}>
+                  <VStack gap={2} w="full">
+                    <Flex w="full" justifyContent="space-between" alignItems="center">
+                      <Text fontSize="12px" color="gray.600" fontWeight="600">स्थिति टॉगल</Text>
+                      <ToggleSwitch isActive={u.isActive} onChange={() => handleToggle(u)} />
+                    </Flex>
+                    <Flex gap={2} w="full">
+                      <Button flex={1} size="sm" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
+                        onClick={() => openEdit(u)} borderRadius="6px" fontSize="13px" h="36px">
+                        <Pencil size={13} style={{ marginRight: 5 }} /> एडिट
+                      </Button>
+                      <Button flex={1} size="sm" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
+                        onClick={() => askDelete(u)} borderRadius="6px" fontSize="13px" h="36px">
+                        <Trash2 size={13} style={{ marginRight: 5 }} /> डिलीट
+                      </Button>
+                    </Flex>
+                  </VStack>
+                </Box>
               </Box>
             ))}
           </VStack>
@@ -212,7 +219,7 @@ const ActiveOfficers = () => {
 
       {/* Edit Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}
-        title={`अधिकारी संपादित करें — ${editing?.name}`}>
+        title={`अधिकारी एडिट करें — ${editing?.name}`}>
         <form onSubmit={handleSave}>
           <VStack gap={4}>
             <FF label="पूरा नाम *">
@@ -246,9 +253,9 @@ const ActiveOfficers = () => {
       </Modal>
 
       <ConfirmDialog isOpen={confirmState.open} onClose={() => setConfirmState({ open: false, id: null, name: '' })}
-        onConfirm={handleDelete} loading={deleting} type="danger" title="अधिकारी हटाएं"
+        onConfirm={handleDelete} loading={deleting} type="danger" title="अधिकारी डिलीट"
         message={`क्या आप सच में "${confirmState.name}" को हटाना चाहते हैं?`}
-        confirmText="हाँ, हटाएं" cancelText="नहीं, रहने दें" />
+        confirmText="हाँ, डिलीट" cancelText="नहीं, रहने दें" />
     </Box>
   );
 };

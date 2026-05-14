@@ -15,7 +15,7 @@ const AvailableOfficers = () => {
   const [assignModal, setAssignModal] = useState(false);
   const [selectedOfficer, setSelectedOfficer] = useState(null);
   const [pendingDuties, setPendingDuties] = useState([]);
-  const [assignForm, setAssignForm] = useState({ dutyId: '', remarks: '' });
+  const [assignForm, setAssignForm] = useState({ dutyId: '', dutyType: 'patrol', startDate: '', endDate: '', remarks: '' });
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
 
@@ -31,10 +31,10 @@ const AvailableOfficers = () => {
 
   const openAssign = async (officer) => {
     setSelectedOfficer(officer);
-    setAssignForm({ dutyId: '', remarks: '' });
+    setAssignForm({ dutyId: '', dutyType: 'patrol', startDate: '', endDate: '', remarks: '' });
     try {
       const { data } = await getDuties();
-      setPendingDuties(data.filter(d => d.status === 'pending' && !d.assignedTo));
+      setPendingDuties(data.filter(d => d.status === 'pending' || d.status === 'active'));
     } catch { toast.error('ड्यूटी सूची लोड नहीं हुई'); }
     setAssignModal(true);
   };
@@ -42,9 +42,17 @@ const AvailableOfficers = () => {
   const handleAssign = async (e) => {
     e.preventDefault();
     if (!assignForm.dutyId) { toast.error('कृपया ड्यूटी चुनें'); return; }
+    if (!assignForm.dutyType) { toast.error('कृपया ड्यूटी प्रकार चुनें'); return; }
+    if (!assignForm.startDate) { toast.error('कृपया शुरू तारीख चुनें'); return; }
     setSaving(true);
     try {
-      await assignDuty(assignForm.dutyId, { userId: selectedOfficer._id, remarks: assignForm.remarks });
+      await assignDuty(assignForm.dutyId, {
+        userId: selectedOfficer._id,
+        dutyType: assignForm.dutyType,
+        startDate: assignForm.startDate,
+        endDate: assignForm.endDate || undefined,
+        remarks: assignForm.remarks,
+      });
       toast.success(`${selectedOfficer.name} को ड्यूटी सफलतापूर्वक असाइन की गई`);
       setAssignModal(false); fetchData();
     } catch (err) { toast.error(err.response?.data?.message || 'असाइन करने में समस्या हुई'); }
@@ -146,9 +154,39 @@ const AvailableOfficers = () => {
                   <option key={d._id} value={d._id}>{d.title} — {d.location || 'स्थान नहीं'}</option>
                 ))}
               </select>
-              {pendingDuties.length === 0 && (
-                <Text fontSize="12px" color="orange.500" mt={1}>⚠️ कोई pending ड्यूटी उपलब्ध नहीं है</Text>
+              {pendingDuties.length === 0 ? (
+                <Box mt={2} p={3} bg="#fff3cd" borderRadius="6px" border="1px solid #856404">
+                  <Text fontSize="12px" color="#856404" fontWeight="600">
+                    ⚠️ कोई उपलब्ध ड्यूटी नहीं है
+                  </Text>
+                  <Text fontSize="11px" color="#856404" mt={1}>
+                    पहले नई ड्यूटी बनाएं या Duties पेज पर जाएं।
+                  </Text>
+                </Box>
+              ) : (
+                <Text fontSize="11px" color="gray.500" mt={1}>
+                  ✅ {pendingDuties.length} उपलब्ध ड्यूटी
+                </Text>
               )}
+            </FF>
+            <FF label="ड्यूटी प्रकार *">
+              <select value={assignForm.dutyType} onChange={(e) => setAssignForm({ ...assignForm, dutyType: e.target.value })}
+                required style={selectStyle}>
+                <option value="patrol">गश्त (Patrol)</option>
+                <option value="guard">पहरा (Guard)</option>
+                <option value="investigation">जांच (Investigation)</option>
+                <option value="traffic">यातायात (Traffic)</option>
+                <option value="special">विशेष (Special)</option>
+                <option value="other">अन्य (Other)</option>
+              </select>
+            </FF>
+            <FF label="शुरू तारीख *">
+              <Input type="datetime-local" value={assignForm.startDate}
+                onChange={(e) => setAssignForm({ ...assignForm, startDate: e.target.value })} required fontSize="14px" />
+            </FF>
+            <FF label="समाप्ति तारीख">
+              <Input type="datetime-local" value={assignForm.endDate}
+                onChange={(e) => setAssignForm({ ...assignForm, endDate: e.target.value })} fontSize="14px" />
             </FF>
             <FF label="टिप्पणी">
               <Input placeholder="असाइनमेंट की टिप्पणी..." value={assignForm.remarks}

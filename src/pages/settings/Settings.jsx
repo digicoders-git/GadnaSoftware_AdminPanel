@@ -101,7 +101,7 @@ const Settings = () => {
                 _hover={{ bg: 'rgba(255,255,255,0.3)' }}
                 onClick={() => setEditingProfile(true)}
                 borderRadius="4px" fontSize="12px" px={3}>
-                <Pencil size={11} style={{ marginRight: 4 }} /> संपादित करें
+                <Pencil size={11} style={{ marginRight: 4 }} /> एडिट करें
               </Button>
             )}
           </Flex>
@@ -172,12 +172,20 @@ const Settings = () => {
                   <FF label="पूरा नाम *">
                     <Input value={profileForm.name}
                       onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                      placeholder="जैसे: रमेश कुमार" fontSize="14px" required />
+                      placeholder="जैसे: रमेश कुमार" fontSize="14px" required
+                      h="48px" borderRadius="8px" border="1.5px solid" borderColor="gray.200"
+                      bg="gray.50" px={4}
+                      _focus={{ borderColor: '#090884', bg: 'white', boxShadow: '0 0 0 3px rgba(9,8,132,0.08)', outline: 'none' }}
+                      transition="all 0.2s" />
                   </FF>
                   <FF label="ईमेल *">
                     <Input type="email" value={profileForm.email}
                       onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
-                      placeholder="जैसे: admin@example.com" fontSize="14px" required />
+                      placeholder="जैसे: admin@example.com" fontSize="14px" required
+                      h="48px" borderRadius="8px" border="1.5px solid" borderColor="gray.200"
+                      bg="gray.50" px={4}
+                      _focus={{ borderColor: '#090884', bg: 'white', boxShadow: '0 0 0 3px rgba(9,8,132,0.08)', outline: 'none' }}
+                      transition="all 0.2s" />
                   </FF>
                   <Flex gap={3} w="full" pt={1}
                     flexDirection={{ base: 'column', sm: 'row' }}
@@ -186,7 +194,7 @@ const Settings = () => {
                       fontSize="14px" w={{ base: 'full', sm: 'auto' }} h="40px"
                       borderRadius="6px" px={5}
                       bg="gray.100" color="gray.700" _hover={{ bg: 'gray.200' }}>
-                      <X size={14} style={{ marginRight: 5 }} /> रद्द करें
+                      <X size={14} style={{ marginRight: 5 }} /> डिलीट करें
                     </Button>
                     <Button type="submit" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
                       loading={savingProfile} loadingText="सहेजा जा रहा है..."
@@ -277,15 +285,18 @@ const Settings = () => {
 };
 
 const PasswordInput = ({ value, onChange, show, onToggle, placeholder }) => (
-  <Flex border="1px solid" borderColor="gray.200" borderRadius="4px" alignItems="center" bg="white">
+  <Flex border="1.5px solid" borderColor="gray.200" borderRadius="8px" alignItems="center"
+    bg="gray.50" h="48px" px={4}
+    _focusWithin={{ borderColor: '#090884', bg: 'white', boxShadow: '0 0 0 3px rgba(9,8,132,0.08)' }}
+    transition="all 0.2s">
     <Input
       type={show ? 'text' : 'password'}
       value={value} onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder} fontSize="14px" border="none"
-      _focus={{ boxShadow: 'none' }} required
+      placeholder={placeholder} fontSize="14px" border="none" bg="transparent"
+      _focus={{ boxShadow: 'none', outline: 'none' }} required pl={0}
     />
-    <Box px={3} cursor="pointer" color="gray.400" _hover={{ color: '#090884' }}
-      onClick={onToggle} flexShrink={0}>
+    <Box cursor="pointer" color="gray.400" _hover={{ color: '#090884' }}
+      onClick={onToggle} flexShrink={0} ml={2}>
       {show ? <EyeOff size={16} /> : <Eye size={16} />}
     </Box>
   </Flex>

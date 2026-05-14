@@ -113,7 +113,7 @@ const Dashboard = () => {
         <StatCard icon={Users} label="कुल सक्रिय" value={overview?.totalUsers || 0} color="#090884" onClick={() => navigate('/stats/active-officers')} />
         <StatCard icon={UserCheck} label="उपलब्ध" value={summary.available || 0} color="#090884" onClick={() => navigate('/stats/available')} />
         <StatCard icon={MapPin} label="ड्यूटी पर" value={summary.onDuty || 0} color="#fe0808" onClick={() => navigate('/stats/on-duty')} />
-        <StatCard icon={Star} label="प्रतिनियुक्त" value={summary.deputed || 0} color="#856404" onClick={() => navigate('/stats/deputed')} />
+        <StatCard icon={Star} label="स्थानांतरित" value={summary.deputed || 0} color="#856404" onClick={() => navigate('/stats/deputed')} />
         <StatCard icon={Umbrella} label="छुट्टी पर" value={summary.onHoliday || 0} color="#fe0808" onClick={() => navigate('/stats/on-holiday')} />
       </SimpleGrid>
 
@@ -170,7 +170,7 @@ const Dashboard = () => {
                     transition="all 0.2s">
                     <HStack gap={2}>
                       <Star size={15} color="#856404" />
-                      <Text fontSize="14px" fontWeight="500" color="gray.700">प्रतिनियुक्त (Deputed)</Text>
+                      <Text fontSize="14px" fontWeight="500" color="gray.700">स्थानांतरित(Deputed)</Text>
                     </HStack>
                     <HStack gap={2}>
                       <Badge bg="#856404" color="white" px={3} py={1} borderRadius="full" fontSize="12px">

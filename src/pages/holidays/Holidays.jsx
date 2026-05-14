@@ -92,11 +92,11 @@ const Holidays = () => {
     setDeleting(true);
     try {
       await deleteHoliday(deleteConfirm.id);
-      toast.success(`${deleteConfirm.name} की छुट्टी रद्द कर दी गई`);
+      toast.success(`${deleteConfirm.name} की छुट्टी डिलीट कर दी गई`);
       setDeleteConfirm({ open: false, id: null, name: '' });
       fetchData();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'रद्द करने में समस्या हुई');
+      toast.error(err.response?.data?.message || 'डिलीट करने में समस्या हुई');
     } finally { setDeleting(false); }
   };
 
@@ -183,13 +183,13 @@ const Holidays = () => {
       </Tabs.Root>
 
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}
-        title={editing ? 'छुट्टी संपादित करें' : 'नई छुट्टी जोड़ें'}>
+        title={editing ? 'छुट्टी एडिट करें' : 'नई छुट्टी जोड़ें'}>
         <form onSubmit={handleSave}>
           <VStack gap={4}>
             {!editing && (
               <FF label="अधिकारी चुनें *">
                 <select value={form.userId} onChange={(e) => setForm({ ...form, userId: e.target.value })}
-                  required style={selectStyle}>
+                  required style={{ width: '100%', height: '48px', padding: '0 12px', border: '1.5px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', outline: 'none', background: '#f7f8fa' }}>
                   <option value="">-- अधिकारी चुनें --</option>
                   {users.map(u => <option key={u._id} value={u._id}>{u.name} ({u.pnoNumber})</option>)}
                 </select>
@@ -197,15 +197,27 @@ const Holidays = () => {
             )}
             <FF label="शुरू तारीख *">
               <Input type="date" value={form.startDate}
-                onChange={(e) => setForm({ ...form, startDate: e.target.value })} required fontSize="14px" />
+                onChange={(e) => setForm({ ...form, startDate: e.target.value })} required
+                fontSize="14px" h="48px" borderRadius="8px" border="1.5px solid" borderColor="gray.200"
+                bg="gray.50" px={4}
+                _focus={{ borderColor: '#090884', bg: 'white', boxShadow: '0 0 0 3px rgba(9,8,132,0.08)', outline: 'none' }}
+                transition="all 0.2s" />
             </FF>
             <FF label="समाप्ति तारीख *">
               <Input type="date" value={form.endDate}
-                onChange={(e) => setForm({ ...form, endDate: e.target.value })} required fontSize="14px" />
+                onChange={(e) => setForm({ ...form, endDate: e.target.value })} required
+                fontSize="14px" h="48px" borderRadius="8px" border="1.5px solid" borderColor="gray.200"
+                bg="gray.50" px={4}
+                _focus={{ borderColor: '#090884', bg: 'white', boxShadow: '0 0 0 3px rgba(9,8,132,0.08)', outline: 'none' }}
+                transition="all 0.2s" />
             </FF>
             <FF label="कारण">
               <Input placeholder="जैसे: वार्षिक अवकाश" value={form.reason}
-                onChange={(e) => setForm({ ...form, reason: e.target.value })} fontSize="14px" />
+                onChange={(e) => setForm({ ...form, reason: e.target.value })}
+                fontSize="14px" h="48px" borderRadius="8px" border="1.5px solid" borderColor="gray.200"
+                bg="gray.50" px={4}
+                _focus={{ borderColor: '#090884', bg: 'white', boxShadow: '0 0 0 3px rgba(9,8,132,0.08)', outline: 'none' }}
+                transition="all 0.2s" />
             </FF>
             <Flex gap={3} w="full" pt={2}
               flexDirection={{ base: 'column', sm: 'row' }}
@@ -229,9 +241,9 @@ const Holidays = () => {
         onConfirm={handleDelete}
         loading={deleting}
         type="warning"
-        title="छुट्टी रद्द करें"
-        message={`क्या आप सच में ${deleteConfirm.name} की छुट्टी को रद्द करना चाहते हैं? यह कार्रवाई वापस नहीं की जा सकती।`}
-        confirmText="हाँ, रद्द करें"
+        title="छुट्टी डिलीट करें"
+        message={`क्या आप सच में ${deleteConfirm.name} की छुट्टी को डिलीट करना चाहते हैं? यह कार्रवाई वापस नहीं की जा सकती।`}
+        confirmText="हाँ, डिलीट करें"
         cancelText="नहीं, रहने दें"
       />
     </Box>
@@ -274,12 +286,12 @@ const HolidayList = ({ data, onEdit, onDelete }) => (
                     {h.status !== 'completed' && (
                       <Button size="xs" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
                         onClick={() => onEdit(h)} borderRadius="4px" px={3} fontSize="12px">
-                        <Pencil size={11} style={{ marginRight: 4 }} /> संपादित
+                        <Pencil size={11} style={{ marginRight: 4 }} /> एडिट
                       </Button>
                     )}
                     <Button size="xs" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
                       onClick={() => onDelete(h)} borderRadius="4px" px={3} fontSize="12px">
-                      <Trash2 size={11} style={{ marginRight: 4 }} /> रद्द
+                      <Trash2 size={11} style={{ marginRight: 4 }} /> डिलीट
                     </Button>
                   </HStack>
                 </Table.Cell>
@@ -346,12 +358,12 @@ const HolidayList = ({ data, onEdit, onDelete }) => (
                   {h.status !== 'completed' && (
                     <Button flex={1} size="sm" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
                       onClick={() => onEdit(h)} borderRadius="6px" fontSize="13px" h="36px">
-                      <Pencil size={13} style={{ marginRight: 5 }} /> संपादित करें
+                      <Pencil size={13} style={{ marginRight: 5 }} /> एडिट करें
                     </Button>
                   )}
                   <Button flex={1} size="sm" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
                     onClick={() => onDelete(h)} borderRadius="6px" fontSize="13px" h="36px">
-                    <Trash2 size={13} style={{ marginRight: 5 }} /> रद्द करें
+                    <Trash2 size={13} style={{ marginRight: 5 }} /> डिलीट करें
                   </Button>
                 </Flex>
               </Box>
