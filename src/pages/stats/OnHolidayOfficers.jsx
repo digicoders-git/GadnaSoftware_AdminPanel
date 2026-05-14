@@ -158,7 +158,7 @@ const OnHolidayOfficers = () => {
                 </Button>
                 <Button size="sm" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
                   onClick={() => askDelete(h)} borderRadius="4px" fontSize="12px" flex="1">
-                  <Trash2 size={12} style={{ marginRight: 4 }} /> डिलीट करें
+                  <Trash2 size={12} style={{ marginRight: 4 }} /> डिलीट
                 </Button>
               </Flex>
             </Box>

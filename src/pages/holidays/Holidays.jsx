@@ -358,12 +358,12 @@ const HolidayList = ({ data, onEdit, onDelete }) => (
                   {h.status !== 'completed' && (
                     <Button flex={1} size="sm" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
                       onClick={() => onEdit(h)} borderRadius="6px" fontSize="13px" h="36px">
-                      <Pencil size={13} style={{ marginRight: 5 }} /> एडिट करें
+                      <Pencil size={13} style={{ marginRight: 5 }} /> एडिट
                     </Button>
                   )}
                   <Button flex={1} size="sm" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
                     onClick={() => onDelete(h)} borderRadius="6px" fontSize="13px" h="36px">
-                    <Trash2 size={13} style={{ marginRight: 5 }} /> डिलीट करें
+                    <Trash2 size={13} style={{ marginRight: 5 }} /> डिलीट
                   </Button>
                 </Flex>
               </Box>

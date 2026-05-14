@@ -249,7 +249,7 @@ const Admins = () => {
                   <Flex borderTop="1px solid" borderColor="gray.100" px={4} py={2} gap={2} justifyContent="flex-end">
                     <Button size="sm" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
                       onClick={() => openEdit(a)} borderRadius="4px" fontSize="13px">
-                      <Pencil size={13} style={{ marginRight: 4 }} /> एडिट करें
+                      <Pencil size={13} style={{ marginRight: 4 }} /> एडिट
                     </Button>
                     {a._id !== currentAdmin?._id && (
                       <Button size="sm" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}

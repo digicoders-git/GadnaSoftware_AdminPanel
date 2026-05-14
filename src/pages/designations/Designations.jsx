@@ -175,7 +175,7 @@ const Designations = () => {
                   <Flex gap={2}>
                     <Button flex={1} size="sm" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
                       onClick={() => openEdit(d)} borderRadius="6px" fontSize="13px" h="38px">
-                      <Pencil size={13} style={{ marginRight: 5 }} /> एडिट करें
+                      <Pencil size={13} style={{ marginRight: 5 }} /> एडिट
                     </Button>
                     <Button flex={1} size="sm" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
                       onClick={() => askDelete(d)} borderRadius="6px" fontSize="13px" h="38px">

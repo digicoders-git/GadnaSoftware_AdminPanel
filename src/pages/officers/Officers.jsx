@@ -249,11 +249,11 @@ const Officers = () => {
                       <ToggleSwitch isActive={u.isActive} onChange={() => handleToggleStatus(u)} />
                       <Button size="xs" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
                         onClick={() => openEdit(u)} borderRadius="4px" px={3} fontSize="12px">
-                        <Pencil size={11} style={{ marginRight: 4 }} /> संपादित
+                        <Pencil size={11} style={{ marginRight: 4 }} /> एडिट
                       </Button>
                       <Button size="xs" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
                         onClick={() => askDelete(u)} borderRadius="4px" px={3} fontSize="12px">
-                        <Trash2 size={11} style={{ marginRight: 4 }} /> हटाएं
+                        <Trash2 size={11} style={{ marginRight: 4 }} /> डिलीट
                       </Button>
                     </HStack>
                   </Table.Cell>
