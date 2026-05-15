@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   Box, Flex, Text, Button, VStack, HStack, Badge, SimpleGrid, Spinner, Input,
 } from '@chakra-ui/react';
-import { MapPin, ArrowLeft, Phone, Hash, Award, UserX, CheckCircle, History, Search } from 'lucide-react';
+import { MapPin, ArrowLeft, Phone, Hash, Award, UserX, CheckCircle, History, Search, ClipboardList } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { getUsers, removeDutyAssignment, completeDuty, getUserHistory } from '../../api/services';
@@ -159,6 +159,11 @@ const OnDutyOfficers = () => {
                     <InfoRow icon={Award} label="पदनाम" value={u.designation?.name || '—'} />
                     <Box h="1px" bg="gray.100" />
                     <InfoRow icon={Hash} label="PNO" value={u.pnoNumber} valueColor="#090884" bold />
+                    {u.activeDuty?.description && (
+                      <Text fontSize="10px" color="gray.500" fontStyle="italic" mt={-1} mb={1}>
+                        {u.activeDuty.description}
+                      </Text>
+                    )}
                     <Box h="1px" bg="gray.100" />
                     <Flex justifyContent="space-between" alignItems="center">
                       <Text fontSize="11px" color="gray.500">ड्यूटी</Text>
@@ -171,6 +176,17 @@ const OnDutyOfficers = () => {
                         <Text fontSize="11px" color="gray.500">स्थान</Text>
                         <Text fontSize="12px" color="gray.600">{u.activeDuty.location}</Text>
                       </Flex>
+                    )}
+                    {u.activeDuty?.assignment?.remarks && (
+                      <Box bg="red.50" p={2} borderRadius="sm" mt={1}>
+                        <HStack gap={1} mb={0.5}>
+                          <ClipboardList size={10} color="#fe0808" />
+                          <Text fontSize="9px" fontWeight="700" color="#fe0808">विवरण/टिप्पणी:</Text>
+                        </HStack>
+                        <Text fontSize="10px" color="#fe0808" fontWeight="500">
+                          {u.activeDuty.assignment.remarks}
+                        </Text>
+                      </Box>
                     )}
                   </VStack>
                 </Box>

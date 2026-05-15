@@ -75,10 +75,10 @@ const Login = () => {
             </Text>
             <Text color="white" fontSize="32px" fontWeight="800" lineHeight="1.2"
               textShadow="0 4px 20px rgba(0,0,0,0.3)">
-              पुलिस लाइन<br />प्रबंधन प्रणाली
+             सीतापुर पुलिस लाइन<br />प्रबंधन प्रणाली
             </Text>
             <Text color="rgba(255,255,255,0.6)" fontSize="15px">
-              Police Line Duty Management System
+              Sitapur Police Line Duty Management System
             </Text>
           </VStack>
 
@@ -149,10 +149,10 @@ const Login = () => {
                 उत्तर प्रदेश पुलिस विभाग
               </Text>
               <Text color="white" fontSize="22px" fontWeight="800" lineHeight="1.2">
-                पुलिस लाइन प्रबंधन
+                सीतापुर पुलिस लाइन प्रबंधन
               </Text>
               <Text color="rgba(255,255,255,0.5)" fontSize="12px">
-                Police Line Duty Management System
+               Sitapur Police Line Duty Management System
               </Text>
             </VStack>
           </Flex>

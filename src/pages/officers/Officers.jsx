@@ -735,7 +735,7 @@ const DutyStatusCell = ({ st, navigate, compact = false, onDutyAssign, onHoliday
   );
 
   if (st.status === 'onDuty') return (
-    <VStack align="flex-start" gap={1} maxW={compact ? '160px' : '160px'}>
+    <VStack align="flex-start" gap={1} maxW={compact ? '200px' : '220px'}>
       <HStack gap={1} flexWrap="wrap">
         <Badge bg="#eeeeff" color="#090884" px={2} py={1} borderRadius="full" fontSize="11px" fontWeight="700">
           ● ड्यूटी पर
@@ -747,8 +747,13 @@ const DutyStatusCell = ({ st, navigate, compact = false, onDutyAssign, onHoliday
         )}
       </HStack>
       {st.duty?.title && (
-        <Text fontSize="11px" color="#090884" fontWeight="600" lineClamp={2} wordBreak="break-word">
+        <Text fontSize="12px" color="#090884" fontWeight="700" lineClamp={2} wordBreak="break-word">
           {st.duty.title}
+        </Text>
+      )}
+      {st.duty?.description && (
+        <Text fontSize="10px" color="gray.600" fontStyle="italic" lineClamp={2} borderLeft="2px solid" borderColor="gray.200" pl={2} mb={1}>
+          {st.duty.description}
         </Text>
       )}
       {st.duty?.location && (
@@ -756,6 +761,15 @@ const DutyStatusCell = ({ st, navigate, compact = false, onDutyAssign, onHoliday
           <MapPin size={10} color="#aaa" style={{ marginTop: 2, flexShrink: 0 }} />
           <Text fontSize="10px" color="gray.500" wordBreak="break-word">{st.duty.location}</Text>
         </HStack>
+      )}
+      {st.duty?.remarks && (
+        <Box bg="blue.50" p={1.5} borderRadius="md" w="full" mt={1}>
+          <HStack gap={1} mb={0.5}>
+            <ClipboardList size={10} color="#090884" />
+            <Text fontSize="9px" fontWeight="700" color="#090884" textTransform="uppercase">विवरण/टिप्पणी:</Text>
+          </HStack>
+          <Text fontSize="10px" color="#090884" fontWeight="500">{st.duty.remarks}</Text>
+        </Box>
       )}
       <Button
         w="full" mt={1} size="xs" bg="#22c55e" color="white" _hover={{ bg: '#16a34a' }}
@@ -768,13 +782,18 @@ const DutyStatusCell = ({ st, navigate, compact = false, onDutyAssign, onHoliday
   );
 
   if (st.status === 'deputed') return (
-    <VStack align="flex-start" gap={1} maxW={compact ? '160px' : '160px'}>
+    <VStack align="flex-start" gap={1} maxW={compact ? '200px' : '220px'}>
       <Badge bg="#fff3cd" color="#856404" px={2} py={1} borderRadius="full" fontSize="11px" fontWeight="700">
         ★ स्थानांतरित
       </Badge>
       {st.duty?.title && (
-        <Text fontSize="11px" color="#856404" fontWeight="600" lineClamp={2} wordBreak="break-word">
+        <Text fontSize="12px" color="#856404" fontWeight="700" lineClamp={2} wordBreak="break-word">
           {st.duty.title}
+        </Text>
+      )}
+      {st.duty?.description && (
+        <Text fontSize="10px" color="gray.600" fontStyle="italic" lineClamp={2} borderLeft="2px solid" borderColor="orange.200" pl={2} mb={1}>
+          {st.duty.description}
         </Text>
       )}
       {st.duty?.location && (
@@ -782,6 +801,15 @@ const DutyStatusCell = ({ st, navigate, compact = false, onDutyAssign, onHoliday
           <MapPin size={10} color="#aaa" style={{ marginTop: 2, flexShrink: 0 }} />
           <Text fontSize="10px" color="gray.500" wordBreak="break-word">{st.duty.location}</Text>
         </HStack>
+      )}
+      {st.duty?.remarks && (
+        <Box bg="orange.50" p={1.5} borderRadius="md" w="full" mt={1}>
+          <HStack gap={1} mb={0.5}>
+            <ClipboardList size={10} color="#856404" />
+            <Text fontSize="9px" fontWeight="700" color="#856404" textTransform="uppercase">विवरण/टिप्पणी:</Text>
+          </HStack>
+          <Text fontSize="10px" color="#856404" fontWeight="500">{st.duty.remarks}</Text>
+        </Box>
       )}
       <Button
         w="full" mt={1} size="xs" bg="#22c55e" color="white" _hover={{ bg: '#16a34a' }}
@@ -794,7 +822,7 @@ const DutyStatusCell = ({ st, navigate, compact = false, onDutyAssign, onHoliday
   );
 
   if (st.status === 'onHoliday') return (
-    <VStack align="flex-start" gap={1}>
+    <VStack align="flex-start" gap={1} maxW={compact ? '200px' : '220px'}>
       <Badge bg="#ffe5e5" color="#fe0808" px={2} py={1} borderRadius="full" fontSize="11px" fontWeight="700">
         ☂ छुट्टी पर
       </Badge>
@@ -809,7 +837,16 @@ const DutyStatusCell = ({ st, navigate, compact = false, onDutyAssign, onHoliday
         </Text>
       )}
       {st.holiday?.reason && (
-        <Text fontSize="10px" color="gray.400" lineClamp={1}>{st.holiday.reason}</Text>
+        <Text fontSize="11px" color="gray.700" fontWeight="600">{st.holiday.reason}</Text>
+      )}
+      {st.holiday?.remarks && (
+        <Box bg="red.50" p={1.5} borderRadius="md" w="full" mt={1}>
+          <HStack gap={1} mb={0.5}>
+            <ClipboardList size={10} color="#fe0808" />
+            <Text fontSize="9px" fontWeight="700" color="#fe0808" textTransform="uppercase">विवरण/टिप्पणी:</Text>
+          </HStack>
+          <Text fontSize="10px" color="#fe0808" fontWeight="500">{st.holiday.remarks}</Text>
+        </Box>
       )}
       <Badge bg="#fff3cd" color="#856404" px={2} py={0.5} borderRadius="full" fontSize="9px" mt={1}>
         ⚠️ छुट्टी समाप्त होने तक प्रतीक्षा करें

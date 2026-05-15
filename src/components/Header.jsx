@@ -47,7 +47,7 @@ const Header = ({ onOpen, onClose, isOpen }) => {
         >
           <Shield size={20} color="white" />
           <Text fontSize="16px" fontWeight="700" letterSpacing="0.5px">
-            पुलिस लाइन
+            सीतापुर पुलिस लाइन
           </Text>
         </HStack>
       </Flex>

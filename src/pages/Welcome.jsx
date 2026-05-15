@@ -113,7 +113,7 @@ const Welcome = () => {
             lineHeight="1.1"
             textShadow="0 4px 20px rgba(0,0,0,0.4)"
           >
-            पुलिस लाइन प्रबंधन प्रणाली
+            सीतापुर पुलिस लाइन प्रबंधन प्रणाली
           </Text>
           <Text
             className="welcome-tagline"
@@ -121,7 +121,7 @@ const Welcome = () => {
             fontSize={{ base: '15px', md: '18px' }}
             fontWeight="500"
           >
-            Police Line Duty Management System
+            Sitapur Police Line Duty Management System
           </Text>
         </VStack>
 

@@ -99,7 +99,7 @@ const Dashboard = () => {
             <Text fontSize={{ base: '16px', md: '20px' }} fontWeight="700" color="gray.700">
               डैशबोर्ड
             </Text>
-            <Text fontSize="12px" color="gray.500">पुलिस लाइन ड्यूटी प्रबंधन प्रणाली</Text>
+            <Text fontSize="12px" color="gray.500">सीतापुर पुलिस लाइन ड्यूटी प्रबंधन प्रणाली</Text>
           </Box>
         </HStack>
         <HStack gap={1}>
