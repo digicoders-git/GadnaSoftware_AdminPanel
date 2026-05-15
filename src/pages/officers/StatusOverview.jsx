@@ -3,7 +3,7 @@ import {
   Box, Flex, Text, SimpleGrid, VStack, HStack, Badge, Spinner, Tabs, Button,
 } from '@chakra-ui/react';
 import {
-  Users, UserCheck, MapPin, Umbrella, RefreshCw, ChevronLeft, ChevronRight,
+  Users, UserCheck, MapPin, Umbrella, RefreshCw, ChevronLeft, ChevronRight, ClipboardList,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -176,7 +176,6 @@ const OfficerGrid = ({ officers, emptyMsg, badgeColor, badgeLabel, borderColor, 
   return (
     <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} gap={3}>
       {officers.map((u, idx) => {
-        // Now u is always the flattened user object from backend aggregation
         const key = u?._id || idx;
         return (
           <Box key={key} bg="white" borderRadius="sm" boxShadow="sm" overflow="hidden" borderLeft={`4px solid ${borderColor}`}>
@@ -191,17 +190,54 @@ const OfficerGrid = ({ officers, emptyMsg, badgeColor, badgeLabel, borderColor, 
               <VStack align="stretch" gap={1}>
                 <Flex justifyContent="space-between"><Text fontSize="11px" color="gray.500">PNO</Text><Text fontSize="12px" fontWeight="700" color="#090884" fontFamily="monospace">{u?.pnoNumber || '—'}</Text></Flex>
                 <Flex justifyContent="space-between"><Text fontSize="11px" color="gray.500">फोन</Text><Text fontSize="12px" color="gray.600">{u?.phoneNumber || '—'}</Text></Flex>
+                
                 {showDuty && u.activeDuty && (
-                  <Flex justifyContent="space-between" alignItems="center">
-                    <Text fontSize="11px" color="gray.500">ड्यूटी</Text>
-                    <Text fontSize="12px" color="#fe0808" fontWeight="600" noOfLines={1} maxW="60%">{u.activeDuty.title || DUTY_TYPE_HINDI[u.activeDuty.dutyType] || '—'}</Text>
-                  </Flex>
+                  <>
+                    {u.activeDuty.description && (
+                      <Text fontSize="10px" color="gray.500" fontStyle="italic" mt={1}>
+                        {u.activeDuty.description}
+                      </Text>
+                    )}
+                    <Flex justifyContent="space-between" alignItems="center" mt={1}>
+                      <Text fontSize="11px" color="gray.500">ड्यूटी</Text>
+                      <Text fontSize="12px" color="#fe0808" fontWeight="600" noOfLines={1} maxW="60%">{u.activeDuty.title || DUTY_TYPE_HINDI[u.activeDuty.dutyType] || '—'}</Text>
+                    </Flex>
+                    {u.activeDuty.assignment?.remarks && (
+                      <Box bg="red.50" p={2} borderRadius="sm" mt={1}>
+                        <HStack gap={1} mb={0.5}>
+                          <ClipboardList size={10} color="#fe0808" />
+                          <Text fontSize="9px" fontWeight="700" color="#fe0808">विवरण/टिप्पणी:</Text>
+                        </HStack>
+                        <Text fontSize="10px" color="#fe0808" fontWeight="500">
+                          {u.activeDuty.assignment.remarks}
+                        </Text>
+                      </Box>
+                    )}
+                  </>
                 )}
+
                 {showHoliday && u.currentHoliday && (
-                  <Flex justifyContent="space-between">
-                    <Text fontSize="11px" color="gray.500">वापसी</Text>
-                    <Text fontSize="12px" color="#fe0808" fontWeight="600">{new Date(u.currentHoliday.endDate).toLocaleDateString('hi-IN')}</Text>
-                  </Flex>
+                  <>
+                    <Flex justifyContent="space-between" mt={1}>
+                      <Text fontSize="11px" color="gray.500">कारण</Text>
+                      <Text fontSize="12px" color="gray.700" fontWeight="600">{u.currentHoliday.reason || '—'}</Text>
+                    </Flex>
+                    <Flex justifyContent="space-between">
+                      <Text fontSize="11px" color="gray.500">वापसी</Text>
+                      <Text fontSize="12px" color="#fe0808" fontWeight="600">{new Date(u.currentHoliday.endDate).toLocaleDateString('hi-IN')}</Text>
+                    </Flex>
+                    {u.currentHoliday.remarks && (
+                      <Box bg="red.50" p={2} borderRadius="sm" mt={1}>
+                        <HStack gap={1} mb={0.5}>
+                          <ClipboardList size={10} color="#fe0808" />
+                          <Text fontSize="9px" fontWeight="700" color="#fe0808">विवरण/टिप्पणी:</Text>
+                        </HStack>
+                        <Text fontSize="10px" color="#fe0808" fontWeight="500">
+                          {u.currentHoliday.remarks}
+                        </Text>
+                      </Box>
+                    )}
+                  </>
                 )}
               </VStack>
             </Box>
