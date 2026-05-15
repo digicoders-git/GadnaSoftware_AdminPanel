@@ -56,8 +56,8 @@ const OfficerHistory = () => {
   return (
     <Box>
       <PageHeader
-        title={`${officer?.name || 'अधिकारी'} — ड्यूटी इतिहास`}
-        subtitle="अधिकारी की सभी ड्यूटी गतिविधियाँ"
+        title={`${officer?.name || 'फोर्स स्टाफ'} — ड्यूटी इतिहास`}
+        subtitle="फोर्स स्टाफ की सभी ड्यूटी गतिविधियाँ"
         icon={ClipboardList}
       />
 
@@ -131,7 +131,7 @@ const OfficerHistory = () => {
         <Box bg="white" borderRadius="sm" p={10} textAlign="center" boxShadow="sm">
           <ClipboardList size={32} color="#ccc" style={{ margin: '0 auto 8px' }} />
           <Text color="gray.500" fontWeight="600">कोई ड्यूटी इतिहास नहीं मिला</Text>
-          <Text color="gray.400" fontSize="13px">इस अधिकारी को अभी तक कोई ड्यूटी असाइन नहीं हुई</Text>
+          <Text color="gray.400" fontSize="13px">इस फोर्स स्टाफ को अभी तक कोई ड्यूटी असाइन नहीं हुई</Text>
         </Box>
       ) : (
         <VStack align="stretch" gap={3}>

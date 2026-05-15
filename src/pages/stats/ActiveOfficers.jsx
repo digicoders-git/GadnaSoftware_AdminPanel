@@ -89,8 +89,8 @@ const ActiveOfficers = () => {
         <HStack gap={3}>
           <Box bg="#090884" p={2} borderRadius="sm"><Users size={20} color="white" /></Box>
           <Box>
-            <Text fontSize={{ base: '16px', md: '20px' }} fontWeight="700" color="gray.700">कुल सक्रिय अधिकारी</Text>
-            <Text fontSize="12px" color="gray.500">सभी सक्रिय पुलिस अधिकारियों की सूची</Text>
+            <Text fontSize={{ base: '16px', md: '20px' }} fontWeight="700" color="gray.700">कुल सक्रिय फोर्स स्टाफ</Text>
+            <Text fontSize="12px" color="gray.500">सभी सक्रिय फोर्स स्टाफ की सूची</Text>
           </Box>
         </HStack>
         <HStack gap={2} cursor="pointer" onClick={() => navigate('/dashboard')}
@@ -123,7 +123,7 @@ const ActiveOfficers = () => {
             </Table.Header>
             <Table.Body>
               {filtered.length === 0 ? (
-                <Table.Row><Table.Cell colSpan={7} textAlign="center" py={10} color="gray.400">कोई अधिकारी नहीं मिला</Table.Cell></Table.Row>
+                <Table.Row><Table.Cell colSpan={7} textAlign="center" py={10} color="gray.400">कोई फोर्स स्टाफ नहीं मिला</Table.Cell></Table.Row>
               ) : filtered.map((u, i) => (
                 <Table.Row key={u._id} _hover={{ bg: 'gray.50' }}>
                   <Table.Cell px={4} py={3} fontSize="13px" color="gray.500">{i + 1}</Table.Cell>
@@ -156,7 +156,7 @@ const ActiveOfficers = () => {
           </Table.Root>
         </Box>
         <Box px={4} py={2} bg="gray.50" borderTop="1px solid" borderColor="gray.100">
-          <Text fontSize="12px" color="gray.500">कुल {filtered.length} सक्रिय अधिकारी</Text>
+          <Text fontSize="12px" color="gray.500">कुल {filtered.length} सक्रिय फोर्स स्टाफ</Text>
         </Box>
       </Box>
 
@@ -164,7 +164,7 @@ const ActiveOfficers = () => {
       <Box display={{ base: 'block', md: 'none' }}>
         {filtered.length === 0 ? (
           <Box bg="white" borderRadius="sm" p={8} textAlign="center" boxShadow="sm">
-            <Text color="gray.400">कोई अधिकारी नहीं मिला</Text>
+            <Text color="gray.400">कोई फोर्स स्टाफ नहीं मिला</Text>
           </Box>
         ) : (
           <VStack gap={3} align="stretch">
@@ -214,12 +214,12 @@ const ActiveOfficers = () => {
             ))}
           </VStack>
         )}
-        <Box mt={3}><Text fontSize="12px" color="gray.500">कुल {filtered.length} सक्रिय अधिकारी</Text></Box>
+        <Box mt={3}><Text fontSize="12px" color="gray.500">कुल {filtered.length} सक्रिय फोर्स स्टाफ</Text></Box>
       </Box>
 
       {/* Edit Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}
-        title={`अधिकारी एडिट करें — ${editing?.name}`}>
+        title={`फोर्स स्टाफ एडिट करें — ${editing?.name}`}>
         <form onSubmit={handleSave}>
           <VStack gap={4}>
             <FF label="पूरा नाम *">
@@ -253,7 +253,7 @@ const ActiveOfficers = () => {
       </Modal>
 
       <ConfirmDialog isOpen={confirmState.open} onClose={() => setConfirmState({ open: false, id: null, name: '' })}
-        onConfirm={handleDelete} loading={deleting} type="danger" title="अधिकारी डिलीट"
+        onConfirm={handleDelete} loading={deleting} type="danger" title="फोर्स स्टाफ डिलीट"
         message={`क्या आप सच में "${confirmState.name}" को हटाना चाहते हैं?`}
         confirmText="हाँ, डिलीट" cancelText="नहीं, रहने दें" />
     </Box>

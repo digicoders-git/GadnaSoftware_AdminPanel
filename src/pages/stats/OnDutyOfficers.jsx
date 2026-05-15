@@ -93,9 +93,9 @@ const OnDutyOfficers = () => {
         <HStack gap={3}>
           <Box bg="#fe0808" p={2} borderRadius="sm"><MapPin size={20} color="white" /></Box>
           <Box>
-            <Text fontSize={{ base: '16px', md: '20px' }} fontWeight="700" color="gray.700">ड्यूटी पर अधिकारी</Text>
+            <Text fontSize={{ base: '16px', md: '20px' }} fontWeight="700" color="gray.700">ड्यूटी पर फोर्स स्टाफ</Text>
             <Text fontSize="12px" color="gray.500">
-              {typeFilter ? `${DUTY_TYPE_HINDI[typeFilter] || typeFilter} ड्यूटी पर तैनात अधिकारी` : 'वर्तमान में सक्रिय ड्यूटी पर तैनात अधिकारी'}
+              {typeFilter ? `${DUTY_TYPE_HINDI[typeFilter] || typeFilter} ड्यूटी पर तैनात फोर्स स्टाफ` : 'वर्तमान में सक्रिय ड्यूटी पर तैनात फोर्स स्टाफ'}
             </Text>
           </Box>
         </HStack>
@@ -129,7 +129,7 @@ const OnDutyOfficers = () => {
       {filtered.length === 0 ? (
         <Box bg="white" borderRadius="sm" p={10} textAlign="center" boxShadow="sm">
           <MapPin size={32} color="#ccc" style={{ margin: '0 auto 8px' }} />
-          <Text color="gray.500" fontWeight="600">कोई अधिकारी ड्यूटी पर नहीं है</Text>
+          <Text color="gray.500" fontWeight="600">कोई फोर्स स्टाफ ड्यूटी पर नहीं है</Text>
         </Box>
       ) : (
         <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} gap={4}>
@@ -190,7 +190,7 @@ const OnDutyOfficers = () => {
           ))}
         </SimpleGrid>
       )}
-      <Box mt={3}><Text fontSize="12px" color="gray.500">कुल {filtered.length} अधिकारी ड्यूटी पर</Text></Box>
+      <Box mt={3}><Text fontSize="12px" color="gray.500">कुल {filtered.length} फोर्स स्टाफ ड्यूटी पर</Text></Box>
 
       {/* Remove Confirm */}
       <ConfirmDialog isOpen={removeConfirm.open}

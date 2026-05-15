@@ -78,7 +78,7 @@ const Duties = () => {
     try {
       const { data } = await getUnassignedUsers();
       setUnassignedUsers(data.unassignedUsers || []);
-    } catch { toast.error('उपलब्ध अधिकारियों की सूची लोड नहीं हुई'); }
+    } catch { toast.error('उपलब्ध फोर्स स्टाफ की सूची लोड नहीं हुई'); }
     setAssignModal(true);
   };
 
@@ -101,7 +101,7 @@ const Duties = () => {
 
   const handleAssign = async (e) => {
     e.preventDefault();
-    if (!assignForm.userId) { toast.error('कृपया अधिकारी चुनें'); return; }
+    if (!assignForm.userId) { toast.error('कृपया फोर्स स्टाफ चुनें'); return; }
     if (!assignForm.dutyType) { toast.error('कृपया ड्यूटी प्रकार चुनें'); return; }
     if (!assignForm.startDate) { toast.error('कृपया शुरू तारीख चुनें'); return; }
     setSaving(true);
@@ -114,7 +114,7 @@ const Duties = () => {
         remarks: assignForm.remarks,
       });
       const selectedOfficer = unassignedUsers.find(u => u._id === assignForm.userId);
-      toast.success(`${selectedOfficer?.name || 'अधिकारी'} को ड्यूटी "${selectedDuty.title}" पर असाइन किया गया`);
+      toast.success(`${selectedOfficer?.name || 'फोर्स स्टाफ'} को ड्यूटी "${selectedDuty.title}" पर असाइन किया गया`);
       setAssignModal(false); fetchDuties();
     } catch (err) { toast.error(err.response?.data?.message || 'असाइन करने में समस्या हुई'); }
     finally { setSaving(false); }
@@ -454,11 +454,11 @@ const Duties = () => {
                 </Box>
               )}
             </Box>
-            <FF label="अधिकारी चुनें *">
+            <FF label="फोर्स स्टाफ चुनें *">
               <select value={assignForm.userId}
                 onChange={(e) => setAssignForm({ ...assignForm, userId: e.target.value })}
                 required style={{ width: '100%', height: '48px', padding: '0 12px', border: '1.5px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', outline: 'none', background: '#f7f8fa' }}>
-                <option value="">-- उपलब्ध अधिकारी चुनें --</option>
+                <option value="">-- उपलब्ध फोर्स स्टाफ चुनें --</option>
                 {unassignedUsers.map(u => (
                   <option key={u._id} value={u._id}>{u.name} — {u.pnoNumber} ({u.designation?.name})</option>
                 ))}
@@ -466,15 +466,15 @@ const Duties = () => {
               {unassignedUsers.length === 0 ? (
                 <Box mt={2} p={3} bg="#fff3cd" borderRadius="6px" border="1px solid #856404">
                   <Text fontSize="12px" color="#856404" fontWeight="600">
-                    ⚠️ कोई उपलब्ध अधिकारी नहीं है
+                    ⚠️ कोई उपलब्ध फोर्स स्टाफ नहीं है
                   </Text>
                   <Text fontSize="11px" color="#856404" mt={1}>
-                    सभी अधिकारी या तो ड्यूटी पर हैं या छुट्टी पर। पहले किसी की ड्यूटी पूर्ण करें।
+                    सभी फोर्स स्टाफ या तो ड्यूटी पर हैं या छुट्टी पर। पहले किसी की ड्यूटी पूर्ण करें।
                   </Text>
                 </Box>
               ) : (
                 <Text fontSize="11px" color="gray.500" mt={1}>
-                  ✅ {unassignedUsers.length} उपलब्ध अधिकारी
+                  ✅ {unassignedUsers.length} उपलब्ध फोर्स स्टाफ
                 </Text>
               )}
             </FF>
@@ -534,7 +534,7 @@ const Duties = () => {
         loading={saving}
         type="success"
         title="ड्यूटी पूर्ण करें"
-        message={`क्या आप पुष्टि करते हैं कि ड्यूटी "${completeConfirm.duty?.title}" पूर्ण हो गई है? सभी असाइन किए गए अधिकारियों की ड्यूटी समाप्त हो जाएगी।`}
+        message={`क्या आप पुष्टि करते हैं कि ड्यूटी "${completeConfirm.duty?.title}" पूर्ण हो गई है? सभी असाइन किए गए फोर्स स्टाफ की ड्यूटी समाप्त हो जाएगी।`}
         confirmText="हाँ, पूर्ण करें"
         cancelText="नहीं, रहने दें"
       />

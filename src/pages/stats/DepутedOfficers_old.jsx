@@ -79,9 +79,9 @@ const DepутedOfficers = () => {
           <Box bg="#856404" p={2} borderRadius="sm"><Star size={20} color="white" /></Box>
           <Box>
             <Text fontSize={{ base: '16px', md: '20px' }} fontWeight="700" color="gray.700">
-              स्थानांतरितअधिकारी
+              स्थानांतरितफोर्स स्टाफ
             </Text>
-            <Text fontSize="12px" color="gray.500">विशेष ड्यूटी (Special Duty) पर तैनात अधिकारी</Text>
+            <Text fontSize="12px" color="gray.500">विशेष ड्यूटी (Special Duty) पर तैनात फोर्स स्टाफ</Text>
           </Box>
         </HStack>
         <HStack gap={2} cursor="pointer" onClick={() => navigate('/dashboard')}
@@ -105,8 +105,8 @@ const DepутedOfficers = () => {
       {filtered.length === 0 ? (
         <Box bg="white" borderRadius="sm" p={10} textAlign="center" boxShadow="sm">
           <Star size={32} color="#ccc" style={{ margin: '0 auto 8px' }} />
-          <Text color="gray.500" fontWeight="600">कोई स्थानांतरितअधिकारी नहीं</Text>
-          <Text color="gray.400" fontSize="13px">कोई भी अधिकारी अभी विशेष ड्यूटी पर नहीं है</Text>
+          <Text color="gray.500" fontWeight="600">कोई स्थानांतरितफोर्स स्टाफ नहीं</Text>
+          <Text color="gray.400" fontSize="13px">कोई भी फोर्स स्टाफ अभी विशेष ड्यूटी पर नहीं है</Text>
         </Box>
       ) : (
         <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} gap={4}>
@@ -194,7 +194,7 @@ const DepутedOfficers = () => {
       )}
 
       <Box mt={3}>
-        <Text fontSize="12px" color="gray.500">कुल {filtered.length} स्थानांतरितअधिकारी</Text>
+        <Text fontSize="12px" color="gray.500">कुल {filtered.length} स्थानांतरितफोर्स स्टाफ</Text>
       </Box>
 
       {/* Remove Confirm */}

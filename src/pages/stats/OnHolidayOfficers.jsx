@@ -53,7 +53,7 @@ const OnHolidayOfficers = () => {
     finally { setSaving(false); }
   };
 
-  const askDelete = (h) => setDeleteConfirm({ open: true, id: h._id, name: h.user?.name || 'अधिकारी' });
+  const askDelete = (h) => setDeleteConfirm({ open: true, id: h._id, name: h.user?.name || 'फोर्स स्टाफ' });
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -90,7 +90,7 @@ const OnHolidayOfficers = () => {
         <HStack gap={3}>
           <Box bg="#fe0808" p={2} borderRadius="sm"><Umbrella size={20} color="white" /></Box>
           <Box>
-            <Text fontSize={{ base: '16px', md: '20px' }} fontWeight="700" color="gray.700">छुट्टी पर अधिकारी</Text>
+            <Text fontSize={{ base: '16px', md: '20px' }} fontWeight="700" color="gray.700">छुट्टी पर फोर्स स्टाफ</Text>
             <Text fontSize="12px" color="gray.500">वर्तमान में चल रही छुट्टियाँ</Text>
           </Box>
         </HStack>
@@ -113,7 +113,7 @@ const OnHolidayOfficers = () => {
       {filtered.length === 0 ? (
         <Box bg="white" borderRadius="sm" p={10} textAlign="center" boxShadow="sm">
           <Umbrella size={32} color="#ccc" style={{ margin: '0 auto 8px' }} />
-          <Text color="gray.500" fontWeight="600">कोई अधिकारी छुट्टी पर नहीं है</Text>
+          <Text color="gray.500" fontWeight="600">कोई फोर्स स्टाफ छुट्टी पर नहीं है</Text>
         </Box>
       ) : (
         <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} gap={4}>
@@ -165,14 +165,14 @@ const OnHolidayOfficers = () => {
           ))}
         </SimpleGrid>
       )}
-      <Box mt={3}><Text fontSize="12px" color="gray.500">कुल {filtered.length} अधिकारी छुट्टी पर</Text></Box>
+      <Box mt={3}><Text fontSize="12px" color="gray.500">कुल {filtered.length} फोर्स स्टाफ छुट्टी पर</Text></Box>
 
       {/* Edit Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="छुट्टी एडिट करें">
         <form onSubmit={handleSave}>
           <VStack gap={4}>
             <Box w="full" p={3} bg="gray.50" borderRadius="sm" borderLeft="3px solid #fe0808">
-              <Text fontSize="12px" color="gray.500">अधिकारी:</Text>
+              <Text fontSize="12px" color="gray.500">फोर्स स्टाफ:</Text>
               <Text fontSize="14px" fontWeight="700" color="gray.700">{editing?.user?.name}</Text>
               <Text fontSize="12px" color="gray.500">{editing?.user?.pnoNumber}</Text>
             </Box>

@@ -12,7 +12,6 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 
 const Admins = () => {
   const { admin: currentAdmin } = useAuth();
-  const isSuperAdmin = currentAdmin?.role === 'superadmin';
 
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -63,7 +62,7 @@ const Admins = () => {
         toast.success(`${form.name} की जानकारी सफलतापूर्वक अपडेट हो गई`);
       } else {
         await createAdmin(form);
-        toast.success(`एडमिन ${form.name} को सफलतापूर्वक जोड़ा गया`);
+        toast.success(`अधिकारी ${form.name} को सफलतापूर्वक जोड़ा गया`);
       }
       setModalOpen(false);
       fetchData();
@@ -83,7 +82,7 @@ const Admins = () => {
     setDeleting(true);
     try {
       await deleteAdmin(confirmState.id);
-      toast.success(`एडमिन ${confirmState.name} को हटा दिया गया`);
+      toast.success(`अधिकारी ${confirmState.name} को हटा दिया गया`);
       setConfirmState({ open: false, id: null, name: '' });
       fetchData();
     } catch (err) {
@@ -106,7 +105,7 @@ const Admins = () => {
 
   return (
     <Box>
-      <PageHeader title="एडमिन प्रबंधन" subtitle="सिस्टम एडमिन को प्रबंधित करें" icon={UserCog} />
+      <PageHeader title="अधिकारी प्रबंधन" subtitle="सिस्टम अधिकारियों को प्रबंधित करें" icon={UserCog} />
 
       <Flex justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={3}>
         <Flex border="1px solid" borderColor="gray.300" borderRadius="4px"
@@ -115,13 +114,11 @@ const Admins = () => {
           <Input border="none" _focus={{ boxShadow: 'none' }} placeholder="नाम या ईमेल खोजें..."
             value={search} onChange={(e) => setSearch(e.target.value)} fontSize="14px" h="38px" />
         </Flex>
-        {isSuperAdmin && (
-          <Button bg="#090884" color="white" _hover={{ bg: '#06066e' }} onClick={openAdd}
-            fontSize="14px" h="40px" borderRadius="6px" px={5}
-            w={{ base: 'full', sm: 'auto' }}>
-            <Plus size={16} style={{ marginRight: 6 }} /> नया एडमिन जोड़ें
-          </Button>
-        )}
+        <Button bg="#090884" color="white" _hover={{ bg: '#06066e' }} onClick={openAdd}
+          fontSize="14px" h="40px" borderRadius="6px" px={5}
+          w={{ base: 'full', sm: 'auto' }}>
+          <Plus size={16} style={{ marginRight: 6 }} /> नया अधिकारी जोड़ें
+        </Button>
       </Flex>
 
       {/* Desktop Table */}
@@ -138,7 +135,7 @@ const Admins = () => {
             <Table.Body>
               {filtered.length === 0 ? (
                 <Table.Row>
-                  <Table.Cell colSpan={7} textAlign="center" py={10} color="gray.400">कोई एडमिन नहीं मिला</Table.Cell>
+                  <Table.Cell colSpan={7} textAlign="center" py={10} color="gray.400">कोई अधिकारी नहीं मिला</Table.Cell>
                 </Table.Row>
               ) : filtered.map((a, i) => (
                 <Table.Row key={a._id} _hover={{ bg: 'gray.50' }}
@@ -163,7 +160,7 @@ const Admins = () => {
                       bg={a.role === 'superadmin' ? '#090884' : '#eeeeff'}
                       color={a.role === 'superadmin' ? 'white' : '#090884'}
                       px={2} py={1} borderRadius="full" fontSize="11px">
-                      {a.role === 'superadmin' ? 'सुपर एडमिन' : 'एडमिन'}
+                      {a.role === 'superadmin' ? 'मुख्य अधिकारी' : 'अधिकारी'}
                     </Badge>
                   </Table.Cell>
                   <Table.Cell px={4} py={3}>
@@ -176,20 +173,18 @@ const Admins = () => {
                     <Text fontSize="12px" color="gray.500">{new Date(a.createdAt).toLocaleDateString('hi-IN')}</Text>
                   </Table.Cell>
                   <Table.Cell px={4} py={3}>
-                    {isSuperAdmin && (
-                      <HStack gap={2}>
-                        <Button size="xs" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
-                          onClick={() => openEdit(a)} borderRadius="4px" px={3} fontSize="12px">
-                          <Pencil size={11} style={{ marginRight: 4 }} /> एडिट
+                    <HStack gap={2}>
+                      <Button size="xs" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
+                        onClick={() => openEdit(a)} borderRadius="4px" px={3} fontSize="12px">
+                        <Pencil size={11} style={{ marginRight: 4 }} /> एडिट
+                      </Button>
+                      {a._id !== currentAdmin?._id && (
+                        <Button size="xs" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
+                          onClick={() => askDelete(a)} borderRadius="4px" px={3} fontSize="12px">
+                          <Trash2 size={11} style={{ marginRight: 4 }} /> डिलीट
                         </Button>
-                        {a._id !== currentAdmin?._id && (
-                          <Button size="xs" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
-                            onClick={() => askDelete(a)} borderRadius="4px" px={3} fontSize="12px">
-                            <Trash2 size={11} style={{ marginRight: 4 }} /> डिलीट
-                          </Button>
-                        )}
-                      </HStack>
-                    )}
+                      )}
+                    </HStack>
                   </Table.Cell>
                 </Table.Row>
               ))}
@@ -197,7 +192,7 @@ const Admins = () => {
           </Table.Root>
         </Box>
         <Box px={4} py={2} bg="gray.50" borderTop="1px solid" borderColor="gray.100">
-          <Text fontSize="12px" color="gray.500">कुल {filtered.length} एडमिन</Text>
+          <Text fontSize="12px" color="gray.500">कुल {filtered.length} अधिकारी</Text>
         </Box>
       </Box>
 
@@ -205,7 +200,7 @@ const Admins = () => {
       <Box display={{ base: 'block', md: 'none' }}>
         {filtered.length === 0 ? (
           <Box bg="white" borderRadius="sm" p={8} textAlign="center" boxShadow="sm">
-            <Text color="gray.400">कोई एडमिन नहीं मिला</Text>
+            <Text color="gray.400">कोई अधिकारी नहीं मिला</Text>
           </Box>
         ) : (
           <VStack gap={3} align="stretch">
@@ -226,7 +221,7 @@ const Admins = () => {
                     bg={a.role === 'superadmin' ? 'white' : 'rgba(255,255,255,0.2)'}
                     color={a.role === 'superadmin' ? '#090884' : 'white'}
                     px={2} py={1} borderRadius="full" fontSize="11px">
-                    {a.role === 'superadmin' ? 'सुपर एडमिन' : 'एडमिन'}
+                    {a.role === 'superadmin' ? 'मुख्य अधिकारी' : 'अधिकारी'}
                   </Badge>
                 </Flex>
                 <Box px={4} py={3}>
@@ -245,50 +240,55 @@ const Admins = () => {
                     </Flex>
                   </VStack>
                 </Box>
-                {isSuperAdmin && (
-                  <Flex borderTop="1px solid" borderColor="gray.100" px={4} py={2} gap={2} justifyContent="flex-end">
-                    <Button size="sm" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
-                      onClick={() => openEdit(a)} borderRadius="4px" fontSize="13px">
-                      <Pencil size={13} style={{ marginRight: 4 }} /> एडिट
+                <Box borderTop="1px solid" borderColor="gray.100" px={4} py={3}>
+                  <Flex gap={2}>
+                    <Button flex={1} size="sm" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
+                      onClick={() => openEdit(a)} borderRadius="6px" fontSize="13px" h="36px">
+                      <Pencil size={13} style={{ marginRight: 5 }} /> एडिट
                     </Button>
                     {a._id !== currentAdmin?._id && (
-                      <Button size="sm" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
-                        onClick={() => askDelete(a)} borderRadius="4px" fontSize="13px">
-                        <Trash2 size={13} style={{ marginRight: 4 }} /> डिलीट
+                      <Button flex={1} size="sm" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
+                        onClick={() => askDelete(a)} borderRadius="4px" fontSize="13px" h="36px">
+                        <Trash2 size={13} style={{ marginRight: 5 }} /> डिलीट
                       </Button>
                     )}
                   </Flex>
-                )}
+                </Box>
               </Box>
             ))}
           </VStack>
         )}
-        <Box mt={3}><Text fontSize="12px" color="gray.500">कुल {filtered.length} एडमिन</Text></Box>
+        <Box mt={3}><Text fontSize="12px" color="gray.500">कुल {filtered.length} अधिकारी</Text></Box>
       </Box>
 
       {/* Add/Edit Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}
-        title={editing ? `एडमिन एडिट करें — ${editing.name}` : 'नया एडमिन जोड़ें'}>
+        title={editing ? `अधिकारी एडिट करें — ${editing.name}` : 'नया अधिकारी जोड़ें'}>
         <form onSubmit={handleSave}>
           <VStack gap={4}>
             <FF label="पूरा नाम *">
-              <Input placeholder="जैसे: Rahul Admin" value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })} required fontSize="14px" />
+              <Input placeholder="जैसे: राहुल कुमार" value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })} required 
+                fontSize="14px" h="48px" borderRadius="8px" border="1.5px solid" borderColor="gray.200"
+                bg="gray.50" px={4} _focus={focusStyle} transition="all 0.2s" />
             </FF>
             <FF label="ईमेल *">
-              <Input placeholder="जैसे: rahul@admin.com" value={form.email} type="email"
-                onChange={(e) => setForm({ ...form, email: e.target.value })} required fontSize="14px" />
+              <Input placeholder="जैसे: rahul@police.com" value={form.email} type="email"
+                onChange={(e) => setForm({ ...form, email: e.target.value })} required 
+                fontSize="14px" h="48px" borderRadius="8px" border="1.5px solid" borderColor="gray.200"
+                bg="gray.50" px={4} _focus={focusStyle} transition="all 0.2s" />
             </FF>
             <FF label={editing ? 'नया पासवर्ड (खाली छोड़ें अगर बदलना नहीं)' : 'पासवर्ड *'}>
               <Input placeholder="••••••••" value={form.password} type="password"
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
-                required={!editing} fontSize="14px" />
+                required={!editing} fontSize="14px" h="48px" borderRadius="8px" border="1.5px solid" borderColor="gray.200"
+                bg="gray.50" px={4} _focus={focusStyle} transition="all 0.2s" />
             </FF>
             <FF label="भूमिका *">
               <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}
                 style={selectStyle}>
-                <option value="admin">एडमिन</option>
-                <option value="superadmin">सुपर एडमिन</option>
+                <option value="admin">अधिकारी</option>
+                <option value="superadmin">मुख्य अधिकारी (Super Admin)</option>
               </select>
             </FF>
             <Flex gap={3} w="full" pt={2}
@@ -313,7 +313,7 @@ const Admins = () => {
         onConfirm={handleDelete}
         loading={deleting}
         type="danger"
-        title="एडमिन डिलीट"
+        title="अधिकारी डिलीट"
         message={`क्या आप सच में "${confirmState.name}" को हटाना चाहते हैं? यह कार्रवाई वापस नहीं की जा सकती।`}
         confirmText="हाँ, डिलीट"
         cancelText="नहीं, रहने दें"
@@ -327,8 +327,12 @@ const FF = ({ label, children }) => (
 );
 
 const selectStyle = {
-  width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0',
-  borderRadius: '4px', fontSize: '14px', outline: 'none', background: 'white',
+  width: '100%', height: '48px', padding: '0 12px', border: '1.5px solid #e2e8f0',
+  borderRadius: '8px', fontSize: '14px', outline: 'none', background: '#f7f8fa',
+};
+
+const focusStyle = {
+  borderColor: '#090884', bg: 'white', boxShadow: '0 0 0 3px rgba(9,8,132,0.08)', outline: 'none'
 };
 
 export default Admins;

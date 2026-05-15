@@ -80,7 +80,7 @@ const Designations = () => {
 
   return (
     <Box>
-      <PageHeader title="पदनाम प्रबंधन" subtitle="अधिकारियों के पदनाम प्रबंधित करें" icon={Layers} />
+      <PageHeader title="पदनाम प्रबंधन" subtitle="फोर्स स्टाफ के पदनाम प्रबंधित करें" icon={Layers} />
 
       <Flex justifyContent="flex-end" mb={4}>
         <Button bg="#090884" color="white" _hover={{ bg: '#06066e' }} onClick={openAdd}
@@ -238,7 +238,7 @@ const Designations = () => {
         loading={deleting}
         type="danger"
         title="पदनाम डिलीट"
-        message={`क्या आप सच में "${confirmState.name}" पदनाम को हटाना चाहते हैं? इस पदनाम से जुड़े अधिकारी प्रभावित हो सकते हैं।`}
+        message={`क्या आप सच में "${confirmState.name}" पदनाम को हटाना चाहते हैं? इस पदनाम से जुड़े फोर्स स्टाफ प्रभावित हो सकते हैं।`}
         confirmText="हाँ, डिलीट"
         cancelText="नहीं, रहने दें"
       />

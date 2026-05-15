@@ -75,8 +75,8 @@ const AvailableOfficers = () => {
         <HStack gap={3}>
           <Box bg="#090884" p={2} borderRadius="sm"><UserCheck size={20} color="white" /></Box>
           <Box>
-            <Text fontSize={{ base: '16px', md: '20px' }} fontWeight="700" color="gray.700">उपलब्ध अधिकारी</Text>
-            <Text fontSize="12px" color="gray.500">ड्यूटी असाइन करने के लिए तैयार अधिकारी</Text>
+            <Text fontSize={{ base: '16px', md: '20px' }} fontWeight="700" color="gray.700">उपलब्ध फोर्स स्टाफ</Text>
+            <Text fontSize="12px" color="gray.500">ड्यूटी असाइन करने के लिए तैयार फोर्स स्टाफ</Text>
           </Box>
         </HStack>
         <HStack gap={2} cursor="pointer" onClick={() => navigate('/dashboard')}
@@ -98,8 +98,8 @@ const AvailableOfficers = () => {
       {filtered.length === 0 ? (
         <Box bg="white" borderRadius="sm" p={10} textAlign="center" boxShadow="sm">
           <UserCheck size={32} color="#ccc" style={{ margin: '0 auto 8px' }} />
-          <Text color="gray.500" fontWeight="600">कोई उपलब्ध अधिकारी नहीं</Text>
-          <Text color="gray.400" fontSize="13px">सभी अधिकारी ड्यूटी या छुट्टी पर हैं</Text>
+          <Text color="gray.500" fontWeight="600">कोई उपलब्ध फोर्स स्टाफ नहीं</Text>
+          <Text color="gray.400" fontSize="13px">सभी फोर्स स्टाफ ड्यूटी या छुट्टी पर हैं</Text>
         </Box>
       ) : (
         <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} gap={4}>
@@ -135,14 +135,14 @@ const AvailableOfficers = () => {
           ))}
         </SimpleGrid>
       )}
-      <Box mt={3}><Text fontSize="12px" color="gray.500">कुल {filtered.length} उपलब्ध अधिकारी</Text></Box>
+      <Box mt={3}><Text fontSize="12px" color="gray.500">कुल {filtered.length} उपलब्ध फोर्स स्टाफ</Text></Box>
 
       {/* Assign Modal */}
       <Modal isOpen={assignModal} onClose={() => setAssignModal(false)} title="ड्यूटी असाइन करें">
         <form onSubmit={handleAssign}>
           <VStack gap={4}>
             <Box w="full" p={3} bg="gray.50" borderRadius="sm" borderLeft="3px solid #090884">
-              <Text fontSize="12px" color="gray.500">अधिकारी:</Text>
+              <Text fontSize="12px" color="gray.500">फोर्स स्टाफ:</Text>
               <Text fontSize="14px" fontWeight="700" color="gray.700">{selectedOfficer?.name}</Text>
               <Text fontSize="12px" color="gray.500">{selectedOfficer?.pnoNumber} • {selectedOfficer?.designation?.name}</Text>
             </Box>

@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import {
   Box, Flex, Text, Button, Input, VStack, HStack, Badge, Table, Spinner, Textarea,
 } from '@chakra-ui/react';
-import { UserPlus, Pencil, Trash2, Users, Search, Phone, Hash, Award, History, ClipboardList, MapPin, Calendar } from 'lucide-react';
+import { UserPlus, Pencil, Trash2, Users, Search, Phone, Hash, Award, History, ClipboardList, MapPin, Calendar, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { getUsers, createUser, updateUser, deleteUser, getDesignations, getUserStatusOverview, getDuties, assignDuty, createHoliday } from '../../api/services';
+import { getUsers, createUser, updateUser, deleteUser, getDesignations, getUserStatusOverview, getDuties, assignDuty, createHoliday, completeDuty } from '../../api/services';
 import PageHeader from '../../components/PageHeader';
 import Modal from '../../components/Modal';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -38,6 +38,7 @@ const Officers = () => {
   const [duties, setDuties] = useState([]);
   const [dutyForm, setDutyForm] = useState({ dutyId: '', dutyType: 'patrol', startDate: '', endDate: '', remarks: '' });
   const [holidayForm, setHolidayForm] = useState({ startDate: '', endDate: '', reason: '', remarks: '' });
+  const [completeConfirm, setCompleteConfirm] = useState({ open: false, duty: null, user: null });
 
   const navigate = useNavigate();
   const fetchData = async () => {
@@ -77,7 +78,7 @@ const Officers = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!form.name.trim()) { toast.error('कृपया अधिकारी का नाम दर्ज करें'); return; }
+    if (!form.name.trim()) { toast.error('कृपया फोर्स स्टाफ का नाम दर्ज करें'); return; }
     if (!form.designation) { toast.error('कृपया पदनाम चुनें'); return; }
     if (!form.pnoNumber.trim()) { toast.error('कृपया PNO नंबर दर्ज करें'); return; }
     if (!form.phoneNumber.trim() || form.phoneNumber.length < 10) { toast.error('कृपया सही फोन नंबर दर्ज करें (10 अंक)'); return; }
@@ -88,7 +89,7 @@ const Officers = () => {
         toast.success(`${form.name} की जानकारी सफलतापूर्वक अपडेट हो गई`);
       } else {
         await createUser(form);
-        toast.success(`अधिकारी ${form.name} को सफलतापूर्वक जोड़ा गया`);
+        toast.success(`फोर्स स्टाफ ${form.name} को सफलतापूर्वक जोड़ा गया`);
       }
       setModalOpen(false);
       fetchData();
@@ -115,7 +116,7 @@ const Officers = () => {
     setDeleting(true);
     try {
       await deleteUser(confirmState.id);
-      toast.success(`अधिकारी ${confirmState.name} को हटा दिया गया`);
+      toast.success(`फोर्स स्टाफ ${confirmState.name} को हटा दिया गया`);
       setConfirmState({ open: false, id: null, name: '' });
       fetchData();
     } catch (err) {
@@ -184,6 +185,24 @@ const Officers = () => {
     }
   };
 
+  const askComplete = (user, duty) => {
+    setCompleteConfirm({ open: true, duty, user });
+  };
+
+  const handleComplete = async () => {
+    setSaving(true);
+    try {
+      await completeDuty(completeConfirm.duty.dutyId, { remarks: 'Officers पेज से पूर्ण की गई' });
+      toast.success(`${completeConfirm.user.name} की ड्यूटी पूर्ण हो गई`);
+      setCompleteConfirm({ open: false, duty: null, user: null });
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'पूर्ण करने में समस्या हुई');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const filtered = users.filter(
     (u) => u.name?.toLowerCase().includes(search.toLowerCase()) ||
       u.pnoNumber?.toLowerCase().includes(search.toLowerCase()) ||
@@ -194,7 +213,7 @@ const Officers = () => {
 
   return (
     <Box>
-      <PageHeader title="अधिकारी प्रबंधन" subtitle="सभी पुलिस अधिकारियों की सूची" icon={Users} />
+      <PageHeader title="फोर्स स्टाफ प्रबंधन" subtitle="सभी पुलिस फोर्स स्टाफ की सूची" icon={Users} />
 
       <Flex justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={3}>
         <Flex border="1px solid" borderColor="gray.300" borderRadius="4px"
@@ -206,7 +225,7 @@ const Officers = () => {
         <Button bg="#090884" color="white" _hover={{ bg: '#06066e' }} onClick={openAdd}
           fontSize="14px" h="40px" borderRadius="6px" px={5}
           w={{ base: 'full', sm: 'auto' }}>
-          <UserPlus size={16} style={{ marginRight: 6 }} /> नया अधिकारी जोड़ें
+          <UserPlus size={16} style={{ marginRight: 6 }} /> नया फोर्स स्टाफ जोड़ें
         </Button>
       </Flex>
 
@@ -224,7 +243,7 @@ const Officers = () => {
             <Table.Body>
               {filtered.length === 0 ? (
                 <Table.Row>
-                  <Table.Cell colSpan={7} textAlign="center" py={10} color="gray.400">कोई अधिकारी नहीं मिला</Table.Cell>
+                  <Table.Cell colSpan={7} textAlign="center" py={10} color="gray.400">कोई फोर्स स्टाफ नहीं मिला</Table.Cell>
                 </Table.Row>
               ) : filtered.map((u, i) => {
                 const st = statusMap[u._id];
@@ -236,7 +255,7 @@ const Officers = () => {
                   <Table.Cell px={4} py={3}><Text fontSize="13px" fontFamily="monospace" color="#090884" fontWeight="600">{u.pnoNumber}</Text></Table.Cell>
                   <Table.Cell px={4} py={3}><Text fontSize="13px" color="gray.600">{u.phoneNumber}</Text></Table.Cell>
                   <Table.Cell px={4} py={3}>
-                    <DutyStatusCell st={st} navigate={navigate} onDutyAssign={() => openDutyAssign(u)} onHolidayAssign={() => openHolidayAssign(u)} />
+                    <DutyStatusCell st={st} navigate={navigate} onDutyAssign={() => openDutyAssign(u)} onHolidayAssign={() => openHolidayAssign(u)} onComplete={() => askComplete(u, st.duty)} />
                   </Table.Cell>
                   <Table.Cell px={4} py={3}>
                     <Badge bg={u.isActive ? '#eeeeff' : '#f8d7da'} color={u.isActive ? '#090884' : '#721c24'}
@@ -265,7 +284,7 @@ const Officers = () => {
         </Box>
         <Box px={4} py={2} bg="gray.50" borderTop="1px solid" borderColor="gray.100">
           <Text fontSize="12px" color="gray.500">
-            कुल {filtered.length} अधिकारी
+            कुल {filtered.length} फोर्स स्टाफ
             {filtered.filter(u => !u.isActive).length > 0 && (
               <> &nbsp;•&nbsp; <span style={{color:'#721c24'}}>{filtered.filter(u => !u.isActive).length} निष्क्रिय</span></>
             )}
@@ -277,7 +296,7 @@ const Officers = () => {
       <Box display={{ base: 'block', md: 'none' }}>
         {filtered.length === 0 ? (
           <Box bg="white" borderRadius="sm" p={8} textAlign="center" boxShadow="sm">
-            <Text color="gray.400">कोई अधिकारी नहीं मिला</Text>
+            <Text color="gray.400">कोई फोर्स स्टाफ नहीं मिला</Text>
           </Box>
         ) : (
           <VStack gap={3} align="stretch">
@@ -315,7 +334,7 @@ const Officers = () => {
                         <Text fontSize="12px" fontWeight="600">ड्यूटी स्थिति</Text>
                       </HStack>
                       <Box pl={1}>
-                        <DutyStatusCell st={st} navigate={navigate} compact onDutyAssign={() => openDutyAssign(u)} onHolidayAssign={() => openHolidayAssign(u)} />
+                        <DutyStatusCell st={st} navigate={navigate} compact onDutyAssign={() => openDutyAssign(u)} onHolidayAssign={() => openHolidayAssign(u)} onComplete={() => askComplete(u, st.duty)} />
                       </Box>
                     </Box>
                   </VStack>
@@ -339,7 +358,7 @@ const Officers = () => {
         )}
         <Box mt={3}>
           <Text fontSize="12px" color="gray.500">
-            कुल {filtered.length} अधिकारी
+            कुल {filtered.length} फोर्स स्टाफ
             {filtered.filter(u => !u.isActive).length > 0 && (
               <> &nbsp;•&nbsp; <span style={{color:'#721c24'}}>{filtered.filter(u => !u.isActive).length} निष्क्रिय</span></>
             )}
@@ -349,7 +368,7 @@ const Officers = () => {
 
       {/* Add/Edit Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}
-        title={editing ? `अधिकारी एडिट करें — ${editing.name}` : 'नया अधिकारी जोड़ें'}>
+        title={editing ? `फोर्स स्टाफ एडिट करें — ${editing.name}` : 'नया फोर्स स्टाफ जोड़ें'}>
         <form onSubmit={handleSave}>
           <VStack gap={4}>
             <FF label="पूरा नाम *">
@@ -417,7 +436,7 @@ const Officers = () => {
         onConfirm={handleDelete}
         loading={deleting}
         type="danger"
-        title="अधिकारी डिलीट"
+        title="फोर्स स्टाफ डिलीट"
         message={`क्या आप सच में "${confirmState.name}" को हटाना चाहते हैं? यह कार्रवाई वापस नहीं की जा सकती।`}
         confirmText="हाँ, डिलीट"
         cancelText="नहीं, रहने दें"
@@ -537,6 +556,17 @@ const Officers = () => {
           </VStack>
         </form>
       </Modal>
+      <ConfirmDialog
+        isOpen={completeConfirm.open}
+        onClose={() => setCompleteConfirm({ open: false, duty: null, user: null })}
+        onConfirm={handleComplete}
+        loading={saving}
+        type="success"
+        title="ड्यूटी पूर्ण करें"
+        message={`क्या आप पुष्टि करते हैं कि ${completeConfirm.user?.name} की ड्यूटी "${completeConfirm.duty?.title}" पूर्ण हो गई है?`}
+        confirmText="हाँ, पूर्ण करें"
+        cancelText="नहीं, रहने दें"
+      />
     </Box>
   );
 };
@@ -550,10 +580,13 @@ const DUTY_TYPE_LABELS = {
   other: 'अन्य',
 };
 
-const DutyStatusCell = ({ st, navigate, compact = false, onDutyAssign, onHolidayAssign }) => {
+const DutyStatusCell = ({ st, navigate, compact = false, onDutyAssign, onHolidayAssign, onComplete }) => {
   if (st && st.status === 'available') {
     st.onDutyAssign = onDutyAssign;
     st.onHolidayAssign = onHolidayAssign;
+  }
+  if (st && (st.status === 'onDuty' || st.status === 'deputed')) {
+    st.onComplete = onComplete;
   }
   if (!st) return (
     <Badge bg="gray.100" color="gray.500" px={2} py={1} borderRadius="full" fontSize="11px">—</Badge>
@@ -618,9 +651,13 @@ const DutyStatusCell = ({ st, navigate, compact = false, onDutyAssign, onHoliday
           <Text fontSize="10px" color="gray.500" wordBreak="break-word">{st.duty.location}</Text>
         </HStack>
       )}
-      <Badge bg="#fff3cd" color="#856404" px={2} py={0.5} borderRadius="full" fontSize="9px" mt={1}>
-        ⚠️ पहले ड्यूटी पूर्ण करें
-      </Badge>
+      <Button
+        w="full" mt={1} size="xs" bg="#22c55e" color="white" _hover={{ bg: '#16a34a' }}
+        onClick={() => st.onComplete && st.onComplete()}
+        borderRadius="4px" fontSize="11px" h="24px" fontWeight="600"
+      >
+        <CheckCircle size={11} style={{ marginRight: 3 }} /> ड्यूटी पूर्ण करें
+      </Button>
     </VStack>
   );
 
@@ -640,9 +677,13 @@ const DutyStatusCell = ({ st, navigate, compact = false, onDutyAssign, onHoliday
           <Text fontSize="10px" color="gray.500" wordBreak="break-word">{st.duty.location}</Text>
         </HStack>
       )}
-      <Badge bg="#ffe5e5" color="#fe0808" px={2} py={0.5} borderRadius="full" fontSize="9px" mt={1}>
-        ⚠️ विशेष ड्यूटी पूर्ण करें
-      </Badge>
+      <Button
+        w="full" mt={1} size="xs" bg="#22c55e" color="white" _hover={{ bg: '#16a34a' }}
+        onClick={() => st.onComplete && st.onComplete()}
+        borderRadius="4px" fontSize="11px" h="24px" fontWeight="600"
+      >
+        <CheckCircle size={11} style={{ marginRight: 3 }} /> ड्यूटी पूर्ण करें
+      </Button>
     </VStack>
   );
 

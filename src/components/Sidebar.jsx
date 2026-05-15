@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Box, VStack, Text, Flex, HStack, Image } from '@chakra-ui/react';
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard, Users, Layers, ClipboardList, History, Umbrella, LogOut, BarChart2, Settings,
+  LayoutDashboard, Users, Layers, ClipboardList, History, Umbrella, LogOut, BarChart2, Settings, UserCog,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -10,12 +10,13 @@ import ConfirmDialog from './ConfirmDialog';
 
 const NAV_ITEMS = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'डैशबोर्ड' },
-  { to: '/officers', icon: Users, label: 'अधिकारी' },
+  { to: '/officers', icon: Users, label: 'फोर्स स्टाफ' },
   { to: '/status-overview', icon: BarChart2, label: 'स्थिति अवलोकन' },
   { to: '/designations', icon: Layers, label: 'पदनाम' },
   { to: '/duties', icon: ClipboardList, label: 'ड्यूटी प्रबंधन' },
   { to: '/duty-history', icon: History, label: 'ड्यूटी इतिहास' },
   { to: '/holidays', icon: Umbrella, label: 'छुट्टी प्रबंधन' },
+  { to: '/admins', icon: UserCog, label: 'अधिकारी' },
   { to: '/settings', icon: Settings, label: 'सेटिंग्स' },
 ];
 
@@ -106,7 +107,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
       {/* Nav Items */}
       <VStack spacing={0} align="stretch" flex="1" mt={1} overflowY="auto">
-        {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
+        {NAV_ITEMS.filter(item => !item.role || item.role === admin?.role).map(({ to, icon: Icon, label }) => (
           <NavLink key={to} to={to} style={{ textDecoration: 'none' }} onClick={handleNavClick}>
             {({ isActive }) => (
               <HStack

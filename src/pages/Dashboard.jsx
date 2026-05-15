@@ -81,7 +81,7 @@ const Dashboard = () => {
           <HStack mb={3} gap={2}>
             <AlertTriangle size={18} color="#856404" />
             <Text fontWeight="700" color="#856404" fontSize={{ base: '13px', md: '14px' }}>
-              {alerts.length} अधिकारी की छुट्टी समाप्त — ड्यूटी असाइन नहीं हुई
+              {alerts.length} फोर्स स्टाफ की छुट्टी समाप्त — ड्यूटी असाइन नहीं हुई
             </Text>
           </HStack>
           <VStack align="stretch" gap={2}>
@@ -123,7 +123,7 @@ const Dashboard = () => {
         <Box bg="white" borderRadius="sm" boxShadow="sm" overflow="hidden">
           <Flex bg="#090884" px={4} py={3} alignItems="center" gap={2}>
             <TrendingUp size={16} color="white" />
-            <Text color="white" fontWeight="600" fontSize="14px">ड्यूटी प्रकार अनुसार अधिकारी</Text>
+            <Text color="white" fontWeight="600" fontSize="14px">ड्यूटी प्रकार अनुसार फोर्स स्टाफ</Text>
           </Flex>
           <Box p={4}>
             {overview?.dutyWise?.length > 0 || summary.deputed > 0 || summary.onDuty > 0 ? (
@@ -140,7 +140,7 @@ const Dashboard = () => {
                     </Text>
                     <HStack gap={2}>
                       <Badge bg="#090884" color="white" px={3} py={1} borderRadius="full" fontSize="12px">
-                        {d.total} अधिकारी
+                        {d.total} फोर्स स्टाफ
                       </Badge>
                       <ChevronRight size={14} color="#090884" />
                     </HStack>
@@ -155,7 +155,7 @@ const Dashboard = () => {
                     <Text fontSize="14px" fontWeight="500" color="gray.700">सक्रिय ड्यूटी</Text>
                     <HStack gap={2}>
                       <Badge bg="#090884" color="white" px={3} py={1} borderRadius="full" fontSize="12px">
-                        {summary.onDuty} अधिकारी
+                        {summary.onDuty} फोर्स स्टाफ
                       </Badge>
                       <ChevronRight size={14} color="#090884" />
                     </HStack>
@@ -174,7 +174,7 @@ const Dashboard = () => {
                     </HStack>
                     <HStack gap={2}>
                       <Badge bg="#856404" color="white" px={3} py={1} borderRadius="full" fontSize="12px">
-                        {summary.deputed} अधिकारी
+                        {summary.deputed} फोर्स स्टाफ
                       </Badge>
                       <ChevronRight size={14} color="#856404" />
                     </HStack>
@@ -251,7 +251,7 @@ const Dashboard = () => {
             <HStack gap={2}>
               <UserCheck size={16} color="white" />
               <Text color="white" fontWeight="600" fontSize="14px">
-                उपलब्ध अधिकारी ({overview.available.length})
+                उपलब्ध फोर्स स्टाफ ({overview.available.length})
               </Text>
             </HStack>
             <Text fontSize="12px" color="rgba(255,255,255,0.7)" cursor="pointer"

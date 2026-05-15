@@ -50,9 +50,9 @@ const StatusOverview = () => {
           <Box bg="#090884" p={2} borderRadius="sm"><Users size={20} color="white" /></Box>
           <Box>
             <Text fontSize={{ base: '16px', md: '20px' }} fontWeight="700" color="gray.700">
-              अधिकारी स्थिति अवलोकन
+              फोर्स स्टाफ स्थिति अवलोकन
             </Text>
-            <Text fontSize="12px" color="gray.500">सभी अधिकारियों की वर्तमान स्थिति</Text>
+            <Text fontSize="12px" color="gray.500">सभी फोर्स स्टाफ की वर्तमान स्थिति</Text>
           </Box>
         </HStack>
         <Flex gap={2} alignItems="center">
@@ -68,7 +68,7 @@ const StatusOverview = () => {
 
       {/* Summary Cards */}
       <SimpleGrid columns={{ base: 2, md: 4 }} gap={{ base: 3, md: 4 }} mb={6}>
-        <SummaryCard icon={Users} label="कुल अधिकारी" value={data?.totalUsers || 0} color="#090884" onClick={() => navigate('/stats/active-officers')} />
+        <SummaryCard icon={Users} label="कुल फोर्स स्टाफ" value={data?.totalUsers || 0} color="#090884" onClick={() => navigate('/stats/active-officers')} />
         <SummaryCard icon={UserCheck} label="उपलब्ध" value={summary.available || 0} color="#22c55e" onClick={() => navigate('/stats/available')} />
         <SummaryCard icon={MapPin} label="ड्यूटी पर" value={summary.onDuty || 0} color="#090884" onClick={() => navigate('/duties')} />
         <SummaryCard icon={Umbrella} label="छुट्टी पर" value={summary.onHoliday || 0} color="#fe0808" onClick={() => navigate('/stats/on-holiday')} />
@@ -91,7 +91,7 @@ const StatusOverview = () => {
         <Tabs.Content value="available">
           <OfficerGrid
             officers={data?.available || []}
-            emptyMsg="कोई उपलब्ध अधिकारी नहीं"
+            emptyMsg="कोई उपलब्ध फोर्स स्टाफ नहीं"
             badgeColor="#090884"
             badgeLabel="उपलब्ध"
             borderColor="#090884"
@@ -107,13 +107,13 @@ const StatusOverview = () => {
                   <Flex alignItems="center" gap={2} mb={3}>
                     <Box bg="#090884" px={3} py={1} borderRadius="full">
                       <Text color="white" fontSize="12px" fontWeight="700">
-                        {DUTY_TYPE_HINDI[group.dutyType] || group.dutyType} — {group.total} अधिकारी
+                        {DUTY_TYPE_HINDI[group.dutyType] || group.dutyType} — {group.total} फोर्स स्टाफ
                       </Text>
                     </Box>
                   </Flex>
                   <OfficerGrid
                     officers={group.users}
-                    emptyMsg="कोई अधिकारी नहीं"
+                    emptyMsg="कोई फोर्स स्टाफ नहीं"
                     badgeColor="#fe0808"
                     badgeLabel={DUTY_TYPE_HINDI[group.dutyType] || group.dutyType}
                     borderColor="#fe0808"
@@ -123,7 +123,7 @@ const StatusOverview = () => {
               ))}
             </VStack>
           ) : (
-            <EmptyState msg="कोई अधिकारी ड्यूटी पर नहीं है" />
+            <EmptyState msg="कोई फोर्स स्टाफ ड्यूटी पर नहीं है" />
           )}
         </Tabs.Content>
 
@@ -131,7 +131,7 @@ const StatusOverview = () => {
         <Tabs.Content value="deputed">
           <OfficerGrid
             officers={data?.deputed || []}
-            emptyMsg="कोई स्थानांतरितअधिकारी नहीं"
+            emptyMsg="कोई स्थानांतरितफोर्स स्टाफ नहीं"
             badgeColor="#fe0808"
             badgeLabel="स्थानांतरित"
             borderColor="#fe0808"
@@ -143,7 +143,7 @@ const StatusOverview = () => {
         <Tabs.Content value="holiday">
           <OfficerGrid
             officers={data?.onHoliday || []}
-            emptyMsg="कोई अधिकारी छुट्टी पर नहीं"
+            emptyMsg="कोई फोर्स स्टाफ छुट्टी पर नहीं"
             badgeColor="#fe0808"
             badgeLabel="छुट्टी पर"
             borderColor="#fe0808"

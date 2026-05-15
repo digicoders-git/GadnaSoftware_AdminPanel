@@ -65,7 +65,7 @@ const Holidays = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!editing && !form.userId) { toast.error('कृपया अधिकारी चुनें'); return; }
+    if (!editing && !form.userId) { toast.error('कृपया फोर्स स्टाफ चुनें'); return; }
     if (!form.startDate || !form.endDate) { toast.error('कृपया शुरू और समाप्ति तारीख चुनें'); return; }
     if (new Date(form.startDate) >= new Date(form.endDate)) {
       toast.error('समाप्ति तारीख शुरू तारीख से बाद की होनी चाहिए'); return;
@@ -78,7 +78,7 @@ const Holidays = () => {
       } else {
         await createHoliday(form);
         const selectedUser = users.find(u => u._id === form.userId);
-        toast.success(`${selectedUser?.name || 'अधिकारी'} की छुट्टी सफलतापूर्वक जोड़ी गई`);
+        toast.success(`${selectedUser?.name || 'फोर्स स्टाफ'} की छुट्टी सफलतापूर्वक जोड़ी गई`);
       }
       setModalOpen(false); fetchData();
     } catch (err) {
@@ -86,7 +86,7 @@ const Holidays = () => {
     } finally { setSaving(false); }
   };
 
-  const askDelete = (h) => setDeleteConfirm({ open: true, id: h._id, name: h.user?.name || 'अधिकारी' });
+  const askDelete = (h) => setDeleteConfirm({ open: true, id: h._id, name: h.user?.name || 'फोर्स स्टाफ' });
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -108,7 +108,7 @@ const Holidays = () => {
 
   return (
     <Box>
-      <PageHeader title="छुट्टी प्रबंधन" subtitle="अधिकारियों की छुट्टी और अलर्ट प्रबंधित करें" icon={Umbrella} />
+      <PageHeader title="छुट्टी प्रबंधन" subtitle="फोर्स स्टाफ की छुट्टी और अलर्ट प्रबंधित करें" icon={Umbrella} />
 
       {/* Overdue Alert Banner */}
       {alerts.totalAlerts > 0 && (
@@ -116,7 +116,7 @@ const Holidays = () => {
           <HStack mb={2} flexWrap="wrap" gap={2}>
             <AlertTriangle size={18} color="#856404" />
             <Text fontWeight="700" color="#856404" fontSize="14px">
-              {alerts.totalAlerts} अधिकारी की छुट्टी समाप्त — ड्यूटी असाइन नहीं हुई
+              {alerts.totalAlerts} फोर्स स्टाफ की छुट्टी समाप्त — ड्यूटी असाइन नहीं हुई
             </Text>
           </HStack>
           <VStack align="stretch" gap={1}>
@@ -187,10 +187,10 @@ const Holidays = () => {
         <form onSubmit={handleSave}>
           <VStack gap={4}>
             {!editing && (
-              <FF label="अधिकारी चुनें *">
+              <FF label="फोर्स स्टाफ चुनें *">
                 <select value={form.userId} onChange={(e) => setForm({ ...form, userId: e.target.value })}
                   required style={{ width: '100%', height: '48px', padding: '0 12px', border: '1.5px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', outline: 'none', background: '#f7f8fa' }}>
-                  <option value="">-- अधिकारी चुनें --</option>
+                  <option value="">-- फोर्स स्टाफ चुनें --</option>
                   {users.map(u => <option key={u._id} value={u._id}>{u.name} ({u.pnoNumber})</option>)}
                 </select>
               </FF>
@@ -258,7 +258,7 @@ const HolidayList = ({ data, onEdit, onDelete }) => (
         <Table.Root size="sm">
           <Table.Header bg="#f8f9fa">
             <Table.Row>
-              {['#', 'अधिकारी', 'शुरू तारीख', 'समाप्ति तारीख', 'कारण', 'स्थिति', 'कार्रवाई'].map(h => (
+              {['#', 'फोर्स स्टाफ', 'शुरू तारीख', 'समाप्ति तारीख', 'कारण', 'स्थिति', 'कार्रवाई'].map(h => (
                 <Table.ColumnHeader key={h} px={4} py={3} fontSize="12px" color="gray.600" fontWeight="700">{h}</Table.ColumnHeader>
               ))}
             </Table.Row>
@@ -381,7 +381,7 @@ const ReturnedView = ({ data }) => {
   if (!data || data.length === 0) return (
     <Box bg="white" borderRadius="sm" p={10} textAlign="center" boxShadow="sm">
       <UserCheck size={32} color="#ccc" style={{ margin: '0 auto 8px' }} />
-      <Text color="gray.500" fontWeight="600">आज कोई अधिकारी वापस नहीं आया</Text>
+      <Text color="gray.500" fontWeight="600">आज कोई फोर्स स्टाफ वापस नहीं आया</Text>
       <Text color="gray.400" fontSize="13px">जिनकी छुट्टी आज समाप्त हुई वे यहाँ दिखेंगे</Text>
     </Box>
   );
@@ -421,7 +421,7 @@ const ReturnedView = ({ data }) => {
           </Box>
         </Box>
       ))}
-      <Box><Text fontSize="12px" color="gray.500">कुल {data.length} अधिकारी आज वापस आए</Text></Box>
+      <Box><Text fontSize="12px" color="gray.500">कुल {data.length} फोर्स स्टाफ आज वापस आए</Text></Box>
     </VStack>
   );
 };
@@ -488,7 +488,7 @@ const AlertsView = ({ alerts }) => (
       <Box bg="white" borderRadius="sm" p={10} textAlign="center" boxShadow="sm">
         <CheckCircle size={32} color="#090884" style={{ margin: '0 auto 8px' }} />
         <Text color="gray.500" fontWeight="600">कोई अलर्ट नहीं है</Text>
-        <Text color="gray.400" fontSize="13px">सभी अधिकारी समय पर ड्यूटी पर हैं</Text>
+        <Text color="gray.400" fontSize="13px">सभी फोर्स स्टाफ समय पर ड्यूटी पर हैं</Text>
       </Box>
     )}
   </VStack>

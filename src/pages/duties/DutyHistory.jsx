@@ -47,7 +47,7 @@ const DutyHistory = () => {
       setHistory(data.history);
       setStats(data.stats);
     } catch {
-      toast.error('अधिकारी का इतिहास लोड नहीं हुआ');
+      toast.error('फोर्स स्टाफ का इतिहास लोड नहीं हुआ');
     } finally {
       setLoading(false);
     }
@@ -55,11 +55,11 @@ const DutyHistory = () => {
 
   return (
     <Box>
-      <PageHeader title="ड्यूटी इतिहास" subtitle="सभी अधिकारियों का ड्यूटी रिकॉर्ड" icon={History} />
+      <PageHeader title="ड्यूटी इतिहास" subtitle="सभी फोर्स स्टाफ का ड्यूटी रिकॉर्ड" icon={History} />
 
       {/* Filter */}
       <Box bg="white" borderRadius="sm" boxShadow="sm" p={4} mb={4}>
-        <Text fontSize="13px" color="gray.600" mb={2} fontWeight="600">अधिकारी अनुसार फ़िल्टर करें</Text>
+        <Text fontSize="13px" color="gray.600" mb={2} fontWeight="600">फोर्स स्टाफ अनुसार फ़िल्टर करें</Text>
         <Flex gap={3} flexWrap="wrap" alignItems="center">
           <select
             value={selectedUser}
@@ -69,7 +69,7 @@ const DutyHistory = () => {
               fontSize: '14px', flex: 1, minWidth: '200px', background: 'white', outline: 'none',
             }}
           >
-            <option value="">-- सभी अधिकारी --</option>
+            <option value="">-- सभी फोर्स स्टाफ --</option>
             {users.map(u => (
               <option key={u._id} value={u._id}>{u.name} ({u.pnoNumber})</option>
             ))}
@@ -122,7 +122,7 @@ const DutyHistory = () => {
                   <Table.Row>
                     <Table.ColumnHeader px={4} py={3} fontSize="12px" color="gray.600" fontWeight="700">#</Table.ColumnHeader>
                     <Table.ColumnHeader px={4} py={3} fontSize="12px" color="gray.600" fontWeight="700">ड्यूटी</Table.ColumnHeader>
-                    <Table.ColumnHeader px={4} py={3} fontSize="12px" color="gray.600" fontWeight="700">अधिकारी</Table.ColumnHeader>
+                    <Table.ColumnHeader px={4} py={3} fontSize="12px" color="gray.600" fontWeight="700">फोर्स स्टाफ</Table.ColumnHeader>
                     <Table.ColumnHeader px={4} py={3} fontSize="12px" color="gray.600" fontWeight="700">कार्रवाई</Table.ColumnHeader>
                     <Table.ColumnHeader px={4} py={3} fontSize="12px" color="gray.600" fontWeight="700">अवधि</Table.ColumnHeader>
                     <Table.ColumnHeader px={4} py={3} fontSize="12px" color="gray.600" fontWeight="700">तारीख</Table.ColumnHeader>
@@ -202,7 +202,7 @@ const DutyHistory = () => {
                         <Flex justifyContent="space-between">
                           <HStack gap={2} color="gray.500">
                             <User size={13} />
-                            <Text fontSize="12px">अधिकारी</Text>
+                            <Text fontSize="12px">फोर्स स्टाफ</Text>
                           </HStack>
                           <Box textAlign="right">
                             <Text fontSize="13px" fontWeight="700" color="#090884">{h.user?.name || '—'}</Text>
@@ -239,7 +239,7 @@ const DutyHistory = () => {
                           <>
                             <Box h="1px" bg="gray.100" />
                             <Flex justifyContent="space-between">
-                              <Text fontSize="12px" color="gray.500">पिछला अधिकारी</Text>
+                              <Text fontSize="12px" color="gray.500">पिछला फोर्स स्टाफ</Text>
                               <Text fontSize="12px" color="orange.500" fontWeight="500">{h.previousUser?.name}</Text>
                             </Flex>
                           </>
