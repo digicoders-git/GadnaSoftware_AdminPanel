@@ -7,7 +7,7 @@ import { loginAdmin } from '../api/services';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ identifier: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const { login } = useAuth();
@@ -15,7 +15,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.email.trim()) { toast.error('कृपया ईमेल पता दर्ज करें'); return; }
+    if (!form.identifier.trim()) { toast.error('कृपया ईमेल या मोबाइल नंबर दर्ज करें'); return; }
     if (!form.password) { toast.error('कृपया पासवर्ड दर्ज करें'); return; }
     setLoading(true);
     try {
@@ -24,7 +24,7 @@ const Login = () => {
       toast.success('✅ स्वागत है ' + data.name + '!');
       navigate('/dashboard');
     } catch (err) {
-      toast.error(err.response?.data?.message || '❌ लॉगिन विफल हुआ। कृपया ईमेल और पासवर्ड जांचें।');
+      toast.error(err.response?.data?.message || '❌ लॉगिन विफल हुआ। कृपया क्रेडेंशियल्स जांचें।');
     } finally {
       setLoading(false);
     }
@@ -200,9 +200,9 @@ const Login = () => {
 
             <form onSubmit={handleSubmit}>
               <VStack gap={4}>
-                {/* Email */}
+                {/* Email / Phone */}
                 <Box w="full">
-                  <Text fontSize="13px" color="gray.600" mb={2} fontWeight="600">ईमेल पता</Text>
+                  <Text fontSize="13px" color="gray.600" mb={2} fontWeight="600">ईमेल या मोबाइल नंबर</Text>
                   <Flex border="1.5px solid" borderColor="gray.200" borderRadius="12px"
                     alignItems="center" px={4} bg="gray.50" h="52px"
                     _focusWithin={{ borderColor: '#090884', bg: 'white', boxShadow: '0 0 0 3px rgba(9,8,132,0.08)' }}
@@ -210,10 +210,10 @@ const Login = () => {
                     <Mail size={17} color="#090884" style={{ flexShrink: 0 }} />
                     <Input border="none" bg="transparent"
                       _focus={{ boxShadow: 'none', outline: 'none' }}
-                      placeholder="admin@gadnaapp.com"
-                      value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      type="email" required fontSize="14px" pl={3} />
+                      placeholder="ईमेल या 10-अंकीय मोबाइल"
+                      value={form.identifier}
+                      onChange={(e) => setForm({ ...form, identifier: e.target.value })}
+                      type="text" required fontSize="14px" pl={3} />
                   </Flex>
                 </Box>
 

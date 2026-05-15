@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
-  Box, Flex, Text, Button, Input, VStack, HStack, Badge, Table, Spinner,
+  Box, Flex, Text, Button, Input, VStack, HStack, Badge, Table, Spinner, SimpleGrid,
 } from '@chakra-ui/react';
-import { UserCog, Plus, Pencil, Trash2, Search, Mail, Shield } from 'lucide-react';
+import { UserCog, Plus, Pencil, Trash2, Search, Mail, Shield, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getAdmins, createAdmin, updateAdmin, deleteAdmin } from '../../api/services';
 import { useAuth } from '../../context/AuthContext';
@@ -18,7 +18,7 @@ const Admins = () => {
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'admin' });
+  const [form, setForm] = useState({ name: '', email: '', phoneNumber: '', password: '', role: 'admin' });
   const [saving, setSaving] = useState(false);
   const [confirmState, setConfirmState] = useState({ open: false, id: null, name: '' });
   const [deleting, setDeleting] = useState(false);
@@ -38,13 +38,13 @@ const Admins = () => {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ name: '', email: '', password: '', role: 'admin' });
+    setForm({ name: '', email: '', phoneNumber: '', password: '', role: 'admin' });
     setModalOpen(true);
   };
 
   const openEdit = (a) => {
     setEditing(a);
-    setForm({ name: a.name, email: a.email, password: '', role: a.role });
+    setForm({ name: a.name, email: a.email, phoneNumber: a.phoneNumber || '', password: '', role: a.role });
     setModalOpen(true);
   };
 
@@ -56,7 +56,7 @@ const Admins = () => {
     setSaving(true);
     try {
       if (editing) {
-        const payload = { name: form.name, email: form.email, role: form.role };
+        const payload = { name: form.name, email: form.email, phoneNumber: form.phoneNumber, role: form.role };
         if (form.password) payload.password = form.password;
         await updateAdmin(editing._id, payload);
         toast.success(`${form.name} की जानकारी सफलतापूर्वक अपडेट हो गई`);
@@ -94,7 +94,8 @@ const Admins = () => {
 
   const filtered = list.filter(
     (a) => a.name?.toLowerCase().includes(search.toLowerCase()) ||
-      a.email?.toLowerCase().includes(search.toLowerCase())
+      a.email?.toLowerCase().includes(search.toLowerCase()) ||
+      a.phoneNumber?.includes(search)
   );
 
   if (loading) return (
@@ -111,7 +112,7 @@ const Admins = () => {
         <Flex border="1px solid" borderColor="gray.300" borderRadius="4px"
           alignItems="center" px={3} bg="white" w={{ base: 'full', sm: '280px' }}>
           <Search size={15} color="#999" />
-          <Input border="none" _focus={{ boxShadow: 'none' }} placeholder="नाम या ईमेल खोजें..."
+          <Input border="none" _focus={{ boxShadow: 'none' }} placeholder="नाम, ईमेल या फोन खोजें..."
             value={search} onChange={(e) => setSearch(e.target.value)} fontSize="14px" h="38px" />
         </Flex>
         <Button bg="#090884" color="white" _hover={{ bg: '#06066e' }} onClick={openAdd}
@@ -127,7 +128,7 @@ const Admins = () => {
           <Table.Root size="sm">
             <Table.Header bg="#f8f9fa">
               <Table.Row>
-                {['#', 'नाम', 'ईमेल', 'भूमिका', 'स्थिति', 'जोड़ा गया', 'कार्रवाई'].map(h => (
+                {['#', 'नाम', 'ईमेल / फोन', 'भूमिका', 'स्थिति', 'जोड़ा गया', 'कार्रवाई'].map(h => (
                   <Table.ColumnHeader key={h} px={4} py={3} fontSize="12px" color="gray.600" fontWeight="700">{h}</Table.ColumnHeader>
                 ))}
               </Table.Row>
@@ -150,10 +151,18 @@ const Admins = () => {
                     </HStack>
                   </Table.Cell>
                   <Table.Cell px={4} py={3}>
-                    <HStack gap={1}>
-                      <Mail size={13} color="#999" />
-                      <Text fontSize="13px" color="gray.600">{a.email}</Text>
-                    </HStack>
+                    <VStack align="flex-start" gap={0}>
+                      <HStack gap={1}>
+                        <Mail size={12} color="#999" />
+                        <Text fontSize="12px" color="gray.600">{a.email}</Text>
+                      </HStack>
+                      {a.phoneNumber && (
+                        <HStack gap={1}>
+                          <Phone size={12} color="#999" />
+                          <Text fontSize="12px" color="gray.600">{a.phoneNumber}</Text>
+                        </HStack>
+                      )}
+                    </VStack>
                   </Table.Cell>
                   <Table.Cell px={4} py={3}>
                     <Badge
@@ -230,9 +239,15 @@ const Admins = () => {
                       <HStack gap={2} color="gray.500"><Mail size={14} /><Text fontSize="12px">ईमेल</Text></HStack>
                       <Text fontSize="13px" color="gray.700">{a.email}</Text>
                     </Flex>
+                    {a.phoneNumber && (
+                      <Flex justifyContent="space-between" alignItems="center">
+                        <HStack gap={2} color="gray.500"><Phone size={14} /><Text fontSize="12px">फोन</Text></HStack>
+                        <Text fontSize="13px" color="gray.700">{a.phoneNumber}</Text>
+                      </Flex>
+                    )}
                     <Box h="1px" bg="gray.100" />
                     <Flex justifyContent="space-between" alignItems="center">
-                      <Text fontSize="12px" color="gray.500">स्थिति</Text>
+                      <Text fontSize="12px" color="gray.500"> स्थिति</Text>
                       <Badge bg={a.isActive ? '#eeeeff' : '#f8d7da'} color={a.isActive ? '#090884' : '#721c24'}
                         px={2} py={1} borderRadius="full" fontSize="11px">
                         {a.isActive ? 'सक्रिय' : 'निष्क्रिय'}
@@ -272,12 +287,20 @@ const Admins = () => {
                 fontSize="14px" h="48px" borderRadius="8px" border="1.5px solid" borderColor="gray.200"
                 bg="gray.50" px={4} _focus={focusStyle} transition="all 0.2s" />
             </FF>
-            <FF label="ईमेल *">
-              <Input placeholder="जैसे: rahul@police.com" value={form.email} type="email"
-                onChange={(e) => setForm({ ...form, email: e.target.value })} required 
-                fontSize="14px" h="48px" borderRadius="8px" border="1.5px solid" borderColor="gray.200"
-                bg="gray.50" px={4} _focus={focusStyle} transition="all 0.2s" />
-            </FF>
+            <SimpleGrid columns={{ base: 1, sm: 2 }} gap={4} w="full">
+              <FF label="ईमेल *">
+                <Input placeholder="rahul@police.com" value={form.email} type="email"
+                  onChange={(e) => setForm({ ...form, email: e.target.value })} required 
+                  fontSize="14px" h="48px" borderRadius="8px" border="1.5px solid" borderColor="gray.200"
+                  bg="gray.50" px={4} _focus={focusStyle} transition="all 0.2s" />
+              </FF>
+              <FF label="मोबाइल नंबर">
+                <Input placeholder="9876543210" value={form.phoneNumber} maxLength={10}
+                  onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })}
+                  fontSize="14px" h="48px" borderRadius="8px" border="1.5px solid" borderColor="gray.200"
+                  bg="gray.50" px={4} _focus={focusStyle} transition="all 0.2s" />
+              </FF>
+            </SimpleGrid>
             <FF label={editing ? 'नया पासवर्ड (खाली छोड़ें अगर बदलना नहीं)' : 'पासवर्ड *'}>
               <Input placeholder="••••••••" value={form.password} type="password"
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
