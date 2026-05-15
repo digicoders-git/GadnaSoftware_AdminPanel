@@ -104,7 +104,7 @@ const Login = () => {
           </HStack>
           <Text color="rgba(255,255,255,0.2)" fontSize="12px">|</Text>
           <Text color="rgba(255,255,255,0.3)" fontSize="11px">
-            © {new Date().getFullYear()} Developed by Digicoders
+            © {new Date().getFullYear()} crafted with ❤️ by <a href="https://digicoders.in" target="_blank" rel="noopener noreferrer" style={{color: "red", textDecoration: "none", fontWeight: "bold"}}> Team Digicoders</a>
           </Text>
         </HStack>
       </Flex>
