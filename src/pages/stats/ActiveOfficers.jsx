@@ -14,6 +14,11 @@ const ActiveOfficers = () => {
   const [designations, setDesignations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: '', designation: '', phoneNumber: '', pnoNumber: '', isActive: true });
@@ -23,19 +28,34 @@ const ActiveOfficers = () => {
   const navigate = useNavigate();
 
   const fetchData = async () => {
+    setLoading(true);
     try {
-      const [uRes, dRes] = await Promise.all([getUsers(true), getDesignations()]);
-      setUsers(uRes.data.filter(u => u.isActive));
+      const queryParams = `?all=false&page=${page}&limit=${limit}&search=${search}`;
+      const [uRes, dRes] = await Promise.all([
+        getUsers(queryParams),
+        getDesignations()
+      ]);
+      setUsers(uRes.data.users);
+      setTotalPages(uRes.data.pages);
+      setTotalCount(uRes.data.total);
       setDesignations(dRes.data);
-    } catch { toast.error('डेटा लोड करने में समस्या हुई'); }
-    finally { setLoading(false); }
+    } catch {
+      toast.error('डेटा लोड करने में समस्या हुई');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [page, limit, search]);
 
   const openEdit = (u) => {
     setEditing(u);
-    setForm({ name: u.name, designation: u.designation?._id || u.designation, phoneNumber: u.phoneNumber, pnoNumber: u.pnoNumber, isActive: u.isActive });
+    setForm({ name: u.name, designation: u.designation?._id || u.designation, phoneNumber: u.phoneNumber || '', pnoNumber: u.pnoNumber, isActive: u.isActive });
     setModalOpen(true);
   };
 
@@ -47,9 +67,13 @@ const ActiveOfficers = () => {
     try {
       await updateUser(editing._id, form);
       toast.success(`${form.name} की जानकारी अपडेट हो गई`);
-      setModalOpen(false); fetchData();
-    } catch (err) { toast.error(err.response?.data?.message || 'कुछ गलत हुआ'); }
-    finally { setSaving(false); }
+      setModalOpen(false);
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'कुछ गलत हुआ');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleToggle = async (u) => {
@@ -57,7 +81,9 @@ const ActiveOfficers = () => {
       await updateUser(u._id, { isActive: !u.isActive });
       toast.success(`${u.name} को ${!u.isActive ? 'सक्रिय' : 'निष्क्रिय'} किया गया`);
       fetchData();
-    } catch { toast.error('स्थिति बदलने में समस्या हुई'); }
+    } catch {
+      toast.error('स्थिति बदलने में समस्या हुई');
+    }
   };
 
   const askDelete = (u) => setConfirmState({ open: true, id: u._id, name: u.name });
@@ -67,18 +93,25 @@ const ActiveOfficers = () => {
     try {
       await deleteUser(confirmState.id);
       toast.success(`${confirmState.name} को हटा दिया गया`);
-      setConfirmState({ open: false, id: null, name: '' }); fetchData();
-    } catch (err) { toast.error(err.response?.data?.message || 'हटाने में समस्या हुई'); }
-    finally { setDeleting(false); }
+      setConfirmState({ open: false, id: null, name: '' });
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'हटाने में समस्या हुई');
+    } finally {
+      setDeleting(false);
+    }
   };
 
-  const filtered = users.filter(u =>
-    u.name?.toLowerCase().includes(search.toLowerCase()) ||
-    u.pnoNumber?.toLowerCase().includes(search.toLowerCase()) ||
-    u.phoneNumber?.includes(search)
-  );
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
+    }
+  };
 
-  if (loading) return <Loader />;
+  const handleLimitChange = (e) => {
+    setLimit(parseInt(e.target.value));
+    setPage(1);
+  };
 
   return (
     <Box>
@@ -90,7 +123,7 @@ const ActiveOfficers = () => {
           <Box bg="#090884" p={2} borderRadius="sm"><Users size={20} color="white" /></Box>
           <Box>
             <Text fontSize={{ base: '16px', md: '20px' }} fontWeight="700" color="gray.700">कुल सक्रिय फोर्स स्टाफ</Text>
-            <Text fontSize="12px" color="gray.500">सभी सक्रिय फोर्स स्टाफ की सूची</Text>
+            <Text fontSize="12px" color="gray.500">सभी सक्रिय फोर्स स्टाफ की सूची (Pagination Enabled)</Text>
           </Box>
         </HStack>
         <HStack gap={2} cursor="pointer" onClick={() => navigate('/dashboard')}
@@ -100,14 +133,28 @@ const ActiveOfficers = () => {
         </HStack>
       </Flex>
 
-      {/* Search */}
-      <Flex mb={4}>
-        <Flex border="1px solid" borderColor="gray.300" borderRadius="4px"
-          alignItems="center" px={3} bg="white" w={{ base: 'full', sm: '300px' }}>
-          <Search size={15} color="#999" />
-          <Input border="none" _focus={{ boxShadow: 'none' }} placeholder="नाम, PNO या फोन खोजें..."
-            value={search} onChange={(e) => setSearch(e.target.value)} fontSize="14px" h="38px" />
-        </Flex>
+      {/* Controls */}
+      <Flex justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={3}>
+        <HStack gap={3} w={{ base: 'full', sm: 'auto' }}>
+          <Flex border="1px solid" borderColor="gray.300" borderRadius="4px"
+            alignItems="center" px={3} bg="white" w={{ base: 'full', sm: '280px' }}
+            _focusWithin={{ borderColor: '#090884', boxShadow: '0 0 0 1px #090884' }}>
+            <Search size={15} color="#999" />
+            <Input border="none" outline="none" _focus={{ boxShadow: 'none' }}
+              placeholder="नाम, PNO या फोन खोजें..."
+              value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} fontSize="14px" h="38px" />
+          </Flex>
+          <HStack gap={2} display={{ base: 'none', sm: 'flex' }}>
+            <Text fontSize="13px" color="gray.500" whiteSpace="nowrap">दिखाएं:</Text>
+            <select value={limit} onChange={handleLimitChange} 
+              style={{ padding: '4px 8px', borderRadius: '4px', border: '1.5px solid #e2e8f0', fontSize: '13px', outline: 'none' }}>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </HStack>
+        </HStack>
       </Flex>
 
       {/* Desktop Table */}
@@ -122,20 +169,21 @@ const ActiveOfficers = () => {
               </Table.Row>
             </Table.Header>
             <Table.Body>
-              {filtered.length === 0 ? (
+              {loading ? (
+                <Table.Row>
+                  <Table.Cell colSpan={7} textAlign="center" py={10}><Spinner size="sm" color="#090884" mr={2} /> लोड हो रहा है...</Table.Cell>
+                </Table.Row>
+              ) : users.length === 0 ? (
                 <Table.Row><Table.Cell colSpan={7} textAlign="center" py={10} color="gray.400">कोई फोर्स स्टाफ नहीं मिला</Table.Cell></Table.Row>
-              ) : filtered.map((u, i) => (
+              ) : users.map((u, i) => (
                 <Table.Row key={u._id} _hover={{ bg: 'gray.50' }}>
-                  <Table.Cell px={4} py={3} fontSize="13px" color="gray.500">{i + 1}</Table.Cell>
+                  <Table.Cell px={4} py={3} fontSize="13px" color="gray.500">{(page - 1) * limit + i + 1}</Table.Cell>
                   <Table.Cell px={4} py={3}><Text fontSize="14px" fontWeight="600" color="gray.700">{u.name}</Text></Table.Cell>
                   <Table.Cell px={4} py={3}><Text fontSize="13px" color="gray.600">{u.designation?.name || '—'}</Text></Table.Cell>
                   <Table.Cell px={4} py={3}><Text fontSize="13px" fontFamily="monospace" color="#090884" fontWeight="600">{u.pnoNumber}</Text></Table.Cell>
-                  <Table.Cell px={4} py={3}><Text fontSize="13px" color="gray.600">{u.phoneNumber}</Text></Table.Cell>
+                  <Table.Cell px={4} py={3}><Text fontSize="13px" color="gray.600">{u.phoneNumber || '—'}</Text></Table.Cell>
                   <Table.Cell px={4} py={3}>
-                    <Badge bg={u.isActive ? '#eeeeff' : '#f8d7da'} color={u.isActive ? '#090884' : '#721c24'}
-                      px={2} py={1} borderRadius="full" fontSize="11px">
-                      {u.isActive ? 'सक्रिय' : 'निष्क्रिय'}
-                    </Badge>
+                    <Badge bg="#eeeeff" color="#090884" px={2} py={1} borderRadius="full" fontSize="11px">सक्रिय</Badge>
                   </Table.Cell>
                   <Table.Cell px={4} py={3}>
                     <HStack gap={2}>
@@ -155,33 +203,81 @@ const ActiveOfficers = () => {
             </Table.Body>
           </Table.Root>
         </Box>
-        <Box px={4} py={2} bg="gray.50" borderTop="1px solid" borderColor="gray.100">
-          <Text fontSize="12px" color="gray.500">कुल {filtered.length} सक्रिय फोर्स स्टाफ</Text>
-        </Box>
+        
+        {/* Pagination Footer */}
+        <Flex px={4} py={3} bg="gray.50" borderTop="1px solid" borderColor="gray.100" 
+          justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={4}>
+          <Text fontSize="13px" color="gray.600">
+            कुल <b>{totalCount}</b> में से <b>{(page - 1) * limit + 1} - {Math.min(page * limit, totalCount)}</b> दिखा रहे हैं
+          </Text>
+          
+          <HStack gap={2}>
+            <Button size="sm" variant="outline" onClick={() => handlePageChange(page - 1)} disabled={page === 1}
+              fontSize="12px" h="32px" borderRadius="4px" borderColor="gray.300">
+              पिछला
+            </Button>
+            
+            <HStack gap={1}>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) pageNum = i + 1;
+                else if (page <= 3) pageNum = i + 1;
+                else if (page >= totalPages - 2) pageNum = totalPages - 4 + i;
+                else pageNum = page - 2 + i;
+                
+                return (
+                  <Button key={pageNum} size="sm" 
+                    bg={page === pageNum ? '#090884' : 'white'} 
+                    color={page === pageNum ? 'white' : 'gray.700'}
+                    border="1px solid" borderColor={page === pageNum ? '#090884' : 'gray.300'}
+                    _hover={{ bg: page === pageNum ? '#090884' : 'gray.100' }}
+                    onClick={() => handlePageChange(pageNum)}
+                    minW="32px" h="32px" fontSize="12px" borderRadius="4px">
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </HStack>
+
+            <Button size="sm" variant="outline" onClick={() => handlePageChange(page + 1)} disabled={page === totalPages}
+              fontSize="12px" h="32px" borderRadius="4px" borderColor="gray.300">
+              अगला
+            </Button>
+          </HStack>
+        </Flex>
       </Box>
 
       {/* Mobile Cards */}
       <Box display={{ base: 'block', md: 'none' }}>
-        {filtered.length === 0 ? (
+        <HStack mb={3} gap={2}>
+          <Text fontSize="13px" color="gray.500">दिखाएं:</Text>
+          <select value={limit} onChange={handleLimitChange} 
+            style={{ padding: '2px 8px', borderRadius: '4px', border: '1.5px solid #e2e8f0', fontSize: '13px', outline: 'none', background: 'white' }}>
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+        </HStack>
+
+        {loading ? (
+          <Flex py={10} justify="center"><Spinner color="#090884" /></Flex>
+        ) : users.length === 0 ? (
           <Box bg="white" borderRadius="sm" p={8} textAlign="center" boxShadow="sm">
             <Text color="gray.400">कोई फोर्स स्टाफ नहीं मिला</Text>
           </Box>
         ) : (
           <VStack gap={3} align="stretch">
-            {filtered.map((u, i) => (
+            {users.map((u, i) => (
               <Box key={u._id} bg="white" borderRadius="sm" boxShadow="sm" overflow="hidden">
                 <Flex bg="#090884" px={4} py={3} justifyContent="space-between" alignItems="center">
                   <HStack gap={2}>
                     <Box bg="rgba(255,255,255,0.2)" borderRadius="full" w="28px" h="28px"
                       display="flex" alignItems="center" justifyContent="center">
-                      <Text color="white" fontSize="12px" fontWeight="700">{i + 1}</Text>
+                      <Text color="white" fontSize="12px" fontWeight="700">{(page - 1) * limit + i + 1}</Text>
                     </Box>
                     <Text color="white" fontSize="15px" fontWeight="700">{u.name}</Text>
                   </HStack>
-                  <Badge bg={u.isActive ? '#eeeeff' : '#f8d7da'} color={u.isActive ? '#090884' : '#721c24'}
-                    px={2} py={1} borderRadius="full" fontSize="11px">
-                    {u.isActive ? 'सक्रिय' : 'निष्क्रिय'}
-                  </Badge>
+                  <Badge bg="#eeeeff" color="#090884" px={2} py={1} borderRadius="full" fontSize="11px">सक्रिय</Badge>
                 </Flex>
                 <Box px={4} py={3}>
                   <VStack gap={2} align="stretch">
@@ -189,7 +285,7 @@ const ActiveOfficers = () => {
                     <Box h="1px" bg="gray.100" />
                     <InfoRow icon={Hash} label="PNO" value={u.pnoNumber} valueColor="#090884" bold />
                     <Box h="1px" bg="gray.100" />
-                    <InfoRow icon={Phone} label="फोन" value={u.phoneNumber} />
+                    <InfoRow icon={Phone} label="फोन" value={u.phoneNumber || '—'} />
                   </VStack>
                 </Box>
                 <Box borderTop="1px solid" borderColor="gray.100" px={4} py={3}>
@@ -214,7 +310,15 @@ const ActiveOfficers = () => {
             ))}
           </VStack>
         )}
-        <Box mt={3}><Text fontSize="12px" color="gray.500">कुल {filtered.length} सक्रिय फोर्स स्टाफ</Text></Box>
+        
+        {/* Mobile Pagination */}
+        <Flex mt={4} justifyContent="space-between" alignItems="center">
+          <Button size="sm" variant="outline" onClick={() => handlePageChange(page - 1)} disabled={page === 1}
+            fontSize="12px" bg="white">पिछला</Button>
+          <Text fontSize="12px" color="gray.600">पेज {page} / {totalPages}</Text>
+          <Button size="sm" variant="outline" onClick={() => handlePageChange(page + 1)} disabled={page === totalPages}
+            fontSize="12px" bg="white">अगला</Button>
+        </Flex>
       </Box>
 
       {/* Edit Modal */}
@@ -234,8 +338,8 @@ const ActiveOfficers = () => {
             <FF label="PNO नंबर *">
               <Input value={form.pnoNumber} onChange={(e) => setForm({ ...form, pnoNumber: e.target.value })} required fontSize="14px" />
             </FF>
-            <FF label="फोन नंबर *">
-              <Input value={form.phoneNumber} onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })} required fontSize="14px" />
+            <FF label="फोन नंबर">
+              <Input value={form.phoneNumber} onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })} fontSize="14px" />
             </FF>
             <FF label="स्थिति">
               <select value={form.isActive ? 'true' : 'false'} onChange={(e) => setForm({ ...form, isActive: e.target.value === 'true' })} style={selectStyle}>
@@ -282,11 +386,5 @@ const FF = ({ label, children }) => (
 );
 
 const selectStyle = { width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '4px', fontSize: '14px', outline: 'none', background: 'white' };
-
-const Loader = () => (
-  <Flex h="60vh" alignItems="center" justifyContent="center">
-    <VStack><Spinner size="xl" color="#090884" /><Text color="gray.500">लोड हो रहा है...</Text></VStack>
-  </Flex>
-);
 
 export default ActiveOfficers;

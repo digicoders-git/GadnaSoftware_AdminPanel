@@ -5,13 +5,18 @@ import {
 import { UserCheck, Search, ArrowLeft, Phone, Hash, Award, ClipboardList } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { getUserStatusOverview, getDuties, assignDuty } from '../../api/services';
+import { getUsers, getDuties, assignDuty } from '../../api/services';
 import Modal from '../../components/Modal';
 
 const AvailableOfficers = () => {
   const [officers, setOfficers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(12); // Grid looks better with 12
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
   const [assignModal, setAssignModal] = useState(false);
   const [selectedOfficer, setSelectedOfficer] = useState(null);
   const [pendingDuties, setPendingDuties] = useState([]);
@@ -20,14 +25,26 @@ const AvailableOfficers = () => {
   const navigate = useNavigate();
 
   const fetchData = async () => {
+    setLoading(true);
     try {
-      const { data } = await getUserStatusOverview();
-      setOfficers(data.available || []);
-    } catch { toast.error('डेटा लोड करने में समस्या हुई'); }
-    finally { setLoading(false); }
+      const queryParams = `?status=available&page=${page}&limit=${limit}&search=${search}`;
+      const { data } = await getUsers(queryParams);
+      setOfficers(data.users);
+      setTotalPages(data.pages);
+      setTotalCount(data.total);
+    } catch {
+      toast.error('डेटा लोड करने में समस्या हुई');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [page, limit, search]);
 
   const openAssign = async (officer) => {
     setSelectedOfficer(officer);
@@ -42,7 +59,6 @@ const AvailableOfficers = () => {
   const handleAssign = async (e) => {
     e.preventDefault();
     if (!assignForm.dutyId) { toast.error('कृपया ड्यूटी चुनें'); return; }
-    if (!assignForm.dutyType) { toast.error('कृपया ड्यूटी प्रकार चुनें'); return; }
     if (!assignForm.startDate) { toast.error('कृपया शुरू तारीख चुनें'); return; }
     setSaving(true);
     try {
@@ -54,18 +70,18 @@ const AvailableOfficers = () => {
         remarks: assignForm.remarks,
       });
       toast.success(`${selectedOfficer.name} को ड्यूटी सफलतापूर्वक असाइन की गई`);
-      setAssignModal(false); fetchData();
-    } catch (err) { toast.error(err.response?.data?.message || 'असाइन करने में समस्या हुई'); }
-    finally { setSaving(false); }
+      setAssignModal(false);
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'असाइन करने में समस्या हुई');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const filtered = officers.filter(u =>
-    u.name?.toLowerCase().includes(search.toLowerCase()) ||
-    u.pnoNumber?.toLowerCase().includes(search.toLowerCase()) ||
-    u.phoneNumber?.includes(search)
-  );
-
-  if (loading) return <Loader />;
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) setPage(newPage);
+  };
 
   return (
     <Box>
@@ -76,7 +92,7 @@ const AvailableOfficers = () => {
           <Box bg="#090884" p={2} borderRadius="sm"><UserCheck size={20} color="white" /></Box>
           <Box>
             <Text fontSize={{ base: '16px', md: '20px' }} fontWeight="700" color="gray.700">उपलब्ध फोर्स स्टाफ</Text>
-            <Text fontSize="12px" color="gray.500">ड्यूटी असाइन करने के लिए तैयार फोर्स स्टाफ</Text>
+            <Text fontSize="12px" color="gray.500">ड्यूटी असाइन करने के लिए तैयार फोर्स स्टाफ (Server-side Pagination)</Text>
           </Box>
         </HStack>
         <HStack gap={2} cursor="pointer" onClick={() => navigate('/dashboard')}
@@ -86,56 +102,82 @@ const AvailableOfficers = () => {
         </HStack>
       </Flex>
 
-      <Flex mb={4}>
+      <Flex justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={3}>
         <Flex border="1px solid" borderColor="gray.300" borderRadius="4px"
-          alignItems="center" px={3} bg="white" w={{ base: 'full', sm: '300px' }}>
+          alignItems="center" px={3} bg="white" w={{ base: 'full', sm: '300px' }}
+          _focusWithin={{ borderColor: '#090884', boxShadow: '0 0 0 1px #090884' }}>
           <Search size={15} color="#999" />
-          <Input border="none" _focus={{ boxShadow: 'none' }} placeholder="नाम, PNO या फोन खोजें..."
-            value={search} onChange={(e) => setSearch(e.target.value)} fontSize="14px" h="38px" />
+          <Input border="none" outline="none" _focus={{ boxShadow: 'none' }}
+            placeholder="नाम, PNO या फोन खोजें..."
+            value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} fontSize="14px" h="38px" />
         </Flex>
+        
+        <HStack gap={2}>
+          <Text fontSize="13px" color="gray.500">दिखाएं:</Text>
+          <select value={limit} onChange={(e) => { setLimit(parseInt(e.target.value)); setPage(1); }} 
+            style={{ padding: '6px 10px', borderRadius: '4px', border: '1.5px solid #e2e8f0', fontSize: '13px', outline: 'none', background: 'white' }}>
+            <option value={12}>12</option>
+            <option value={24}>24</option>
+            <option value={48}>48</option>
+            <option value={96}>96</option>
+          </select>
+        </HStack>
       </Flex>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <Flex h="300px" align="center" justify="center"><Spinner color="#090884" /></Flex>
+      ) : officers.length === 0 ? (
         <Box bg="white" borderRadius="sm" p={10} textAlign="center" boxShadow="sm">
           <UserCheck size={32} color="#ccc" style={{ margin: '0 auto 8px' }} />
           <Text color="gray.500" fontWeight="600">कोई उपलब्ध फोर्स स्टाफ नहीं</Text>
           <Text color="gray.400" fontSize="13px">सभी फोर्स स्टाफ ड्यूटी या छुट्टी पर हैं</Text>
         </Box>
       ) : (
-        <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} gap={4}>
-          {filtered.map((u, i) => (
-            <Box key={u._id} bg="white" borderRadius="sm" boxShadow="sm" overflow="hidden"
-              borderLeft="4px solid #090884">
-              <Flex bg="#090884" px={4} py={3} justifyContent="space-between" alignItems="center">
-                <HStack gap={2}>
-                  <Box bg="rgba(255,255,255,0.2)" borderRadius="full" w="26px" h="26px"
-                    display="flex" alignItems="center" justifyContent="center">
-                    <Text color="white" fontSize="11px" fontWeight="700">{i + 1}</Text>
-                  </Box>
-                  <Text color="white" fontSize="14px" fontWeight="700" noOfLines={1}>{u.name}</Text>
-                </HStack>
-                <Badge bg="#eeeeff" color="#090884" px={2} py={0.5} borderRadius="full" fontSize="10px">उपलब्ध</Badge>
-              </Flex>
-              <Box px={4} py={3}>
-                <VStack gap={2} align="stretch">
-                  <InfoRow icon={Award} label="पदनाम" value={u.designation?.name || '—'} />
-                  <Box h="1px" bg="gray.100" />
-                  <InfoRow icon={Hash} label="PNO" value={u.pnoNumber} valueColor="#090884" bold />
-                  <Box h="1px" bg="gray.100" />
-                  <InfoRow icon={Phone} label="फोन" value={u.phoneNumber} />
-                </VStack>
+        <VStack align="stretch" gap={6}>
+          <SimpleGrid columns={{ base: 1, sm: 2, lg: 3, xl: 4 }} gap={4}>
+            {officers.map((u, i) => (
+              <Box key={u._id} bg="white" borderRadius="sm" boxShadow="sm" overflow="hidden"
+                borderLeft="4px solid #090884">
+                <Flex bg="#090884" px={4} py={3} justifyContent="space-between" alignItems="center">
+                  <HStack gap={2}>
+                    <Box bg="rgba(255,255,255,0.2)" borderRadius="full" w="26px" h="26px"
+                      display="flex" alignItems="center" justifyContent="center">
+                      <Text color="white" fontSize="11px" fontWeight="700">{(page - 1) * limit + i + 1}</Text>
+                    </Box>
+                    <Text color="white" fontSize="14px" fontWeight="700" noOfLines={1}>{u.name}</Text>
+                  </HStack>
+                  <Badge bg="#eeeeff" color="#090884" px={2} py={0.5} borderRadius="full" fontSize="10px">उपलब्ध</Badge>
+                </Flex>
+                <Box px={4} py={3}>
+                  <VStack gap={2} align="stretch">
+                    <InfoRow icon={Award} label="पदनाम" value={u.designation?.name || '—'} />
+                    <Box h="1px" bg="gray.100" />
+                    <InfoRow icon={Hash} label="PNO" value={u.pnoNumber} valueColor="#090884" bold />
+                    <Box h="1px" bg="gray.100" />
+                    <InfoRow icon={Phone} label="फोन" value={u.phoneNumber || '—'} />
+                  </VStack>
+                </Box>
+                <Flex borderTop="1px solid" borderColor="gray.100" px={4} py={2} justifyContent="flex-end">
+                  <Button size="sm" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
+                    onClick={() => openAssign(u)} borderRadius="4px" fontSize="13px" h="36px" px={4}>
+                    <ClipboardList size={13} style={{ marginRight: 5 }} /> ड्यूटी असाइन करें
+                  </Button>
+                </Flex>
               </Box>
-              <Flex borderTop="1px solid" borderColor="gray.100" px={4} py={2} justifyContent="flex-end">
-                <Button size="sm" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
-                  onClick={() => openAssign(u)} borderRadius="4px" fontSize="13px" h="36px" px={4}>
-                  <ClipboardList size={13} style={{ marginRight: 5 }} /> ड्यूटी असाइन करें
-                </Button>
-              </Flex>
-            </Box>
-          ))}
-        </SimpleGrid>
+            ))}
+          </SimpleGrid>
+
+          {/* Pagination */}
+          <Flex justifyContent="space-between" alignItems="center" pt={4} borderTop="1px solid" borderColor="gray.100">
+            <Text fontSize="13px" color="gray.500">कुल <b>{totalCount}</b> उपलब्ध फोर्स स्टाफ</Text>
+            <HStack gap={2}>
+              <Button size="sm" variant="outline" onClick={() => handlePageChange(page - 1)} disabled={page === 1} fontSize="12px">पिछला</Button>
+              <Text fontSize="12px" fontWeight="600">पेज {page} / {totalPages}</Text>
+              <Button size="sm" variant="outline" onClick={() => handlePageChange(page + 1)} disabled={page === totalPages} fontSize="12px">अगला</Button>
+            </HStack>
+          </Flex>
+        </VStack>
       )}
-      <Box mt={3}><Text fontSize="12px" color="gray.500">कुल {filtered.length} उपलब्ध फोर्स स्टाफ</Text></Box>
 
       {/* Assign Modal */}
       <Modal isOpen={assignModal} onClose={() => setAssignModal(false)} title="ड्यूटी असाइन करें">
@@ -154,20 +196,6 @@ const AvailableOfficers = () => {
                   <option key={d._id} value={d._id}>{d.title} — {d.location || 'स्थान नहीं'}</option>
                 ))}
               </select>
-              {pendingDuties.length === 0 ? (
-                <Box mt={2} p={3} bg="#fff3cd" borderRadius="6px" border="1px solid #856404">
-                  <Text fontSize="12px" color="#856404" fontWeight="600">
-                    ⚠️ कोई उपलब्ध ड्यूटी नहीं है
-                  </Text>
-                  <Text fontSize="11px" color="#856404" mt={1}>
-                    पहले नई ड्यूटी बनाएं या Duties पेज पर जाएं।
-                  </Text>
-                </Box>
-              ) : (
-                <Text fontSize="11px" color="gray.500" mt={1}>
-                  ✅ {pendingDuties.length} उपलब्ध ड्यूटी
-                </Text>
-              )}
             </FF>
             <FF label="ड्यूटी प्रकार *">
               <select value={assignForm.dutyType} onChange={(e) => setAssignForm({ ...assignForm, dutyType: e.target.value })}
@@ -181,26 +209,22 @@ const AvailableOfficers = () => {
               </select>
             </FF>
             <FF label="शुरू तारीख *">
-              <Input type="datetime-local" value={assignForm.startDate}
+              <Input type="date" value={assignForm.startDate}
                 onChange={(e) => setAssignForm({ ...assignForm, startDate: e.target.value })} required fontSize="14px" />
             </FF>
             <FF label="समाप्ति तारीख">
-              <Input type="datetime-local" value={assignForm.endDate}
+              <Input type="date" value={assignForm.endDate}
                 onChange={(e) => setAssignForm({ ...assignForm, endDate: e.target.value })} fontSize="14px" />
             </FF>
             <FF label="टिप्पणी">
               <Input placeholder="असाइनमेंट की टिप्पणी..." value={assignForm.remarks}
                 onChange={(e) => setAssignForm({ ...assignForm, remarks: e.target.value })} fontSize="14px" />
             </FF>
-            <Flex gap={3} w="full" pt={2}
-              flexDirection={{ base: 'column', sm: 'row' }}
-              justifyContent={{ base: 'stretch', sm: 'flex-end' }}>
-              <Button variant="outline" onClick={() => setAssignModal(false)} fontSize="14px"
-                w={{ base: 'full', sm: 'auto' }} h="40px">रद्द करें</Button>
+            <Flex gap={3} w="full" pt={2} justifyContent="flex-end">
+              <Button variant="outline" onClick={() => setAssignModal(false)} fontSize="14px" h="40px">रद्द करें</Button>
               <Button type="submit" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
                 loading={saving} loadingText="असाइन हो रहा है..." fontSize="14px"
-                isDisabled={pendingDuties.length === 0}
-                w={{ base: 'full', sm: 'auto' }} h="40px">असाइन करें</Button>
+                isDisabled={pendingDuties.length === 0} h="40px">असाइन करें</Button>
             </Flex>
           </VStack>
         </form>
@@ -221,11 +245,5 @@ const FF = ({ label, children }) => (
 );
 
 const selectStyle = { width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '4px', fontSize: '14px', outline: 'none', background: 'white' };
-
-const Loader = () => (
-  <Flex h="60vh" alignItems="center" justifyContent="center">
-    <VStack><Spinner size="xl" color="#090884" /><Text color="gray.500">लोड हो रहा है...</Text></VStack>
-  </Flex>
-);
 
 export default AvailableOfficers;

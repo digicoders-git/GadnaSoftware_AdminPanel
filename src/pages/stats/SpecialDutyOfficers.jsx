@@ -5,14 +5,19 @@ import {
 import { Star, ArrowLeft, Phone, Hash, Award, MapPin, Calendar, UserX, CheckCircle, History, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { getUserStatusOverview, removeDutyAssignment, completeDuty, getUserHistory } from '../../api/services';
+import { getUsers, removeDutyAssignment, completeDuty, getUserHistory } from '../../api/services';
 import Modal from '../../components/Modal';
 import ConfirmDialog from '../../components/ConfirmDialog';
 
 const SpecialDutyOfficers = () => {
-  const [deputed, setDeputed] = useState([]);
+  const [officers, setOfficers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(12);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
   const [remarkText, setRemarkText] = useState('');
   const [removeConfirm, setRemoveConfirm] = useState({ open: false, item: null });
   const [completeConfirm, setCompleteConfirm] = useState({ open: false, item: null });
@@ -23,20 +28,32 @@ const SpecialDutyOfficers = () => {
   const navigate = useNavigate();
 
   const fetchData = async () => {
+    setLoading(true);
     try {
-      const { data } = await getUserStatusOverview();
-      setDeputed(data.deputed || []);
+      const queryParams = `?status=onDuty&dutyType=special&page=${page}&limit=${limit}&search=${search}`;
+      const { data } = await getUsers(queryParams);
+      setOfficers(data.users);
+      setTotalPages(data.pages);
+      setTotalCount(data.total);
     } catch { toast.error('डेटा लोड करने में समस्या हुई'); }
     finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [page, limit, search]);
 
   const handleRemove = async () => {
     setSaving(true);
     try {
-      await removeDutyAssignment(removeConfirm.item.duty.dutyId, { remarks: remarkText });
-      toast.success(`${removeConfirm.item.user.name} को विशेष ड्यूटी से हटा दिया गया`);
+      await removeDutyAssignment(removeConfirm.item.activeDuty._id, { 
+        remarks: remarkText,
+        userId: removeConfirm.item._id 
+      });
+      toast.success(`${removeConfirm.item.name} को विशेष ड्यूटी से हटा दिया गया`);
       setRemoveConfirm({ open: false, item: null }); fetchData();
     } catch (err) { toast.error(err.response?.data?.message || 'हटाने में समस्या हुई'); }
     finally { setSaving(false); }
@@ -45,8 +62,11 @@ const SpecialDutyOfficers = () => {
   const handleComplete = async () => {
     setSaving(true);
     try {
-      await completeDuty(completeConfirm.item.duty.dutyId, { remarks: remarkText });
-      toast.success(`विशेष ड्यूटी "${completeConfirm.item.duty.title}" पूर्ण हो गई`);
+      await completeDuty(completeConfirm.item.activeDuty._id, { 
+        remarks: remarkText,
+        userId: completeConfirm.item._id 
+      });
+      toast.success(`विशेष ड्यूटी "${completeConfirm.item.activeDuty.title}" पूर्ण हो गई`);
       setCompleteConfirm({ open: false, item: null }); fetchData();
     } catch (err) { toast.error(err.response?.data?.message || 'पूर्ण करने में समस्या हुई'); }
     finally { setSaving(false); }
@@ -62,12 +82,9 @@ const SpecialDutyOfficers = () => {
     finally { setHistoryLoading(false); }
   };
 
-  const filtered = deputed.filter(item =>
-    item.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
-    item.user?.pnoNumber?.toLowerCase().includes(search.toLowerCase())
-  );
-
-  if (loading) return <Loader />;
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) setPage(newPage);
+  };
 
   return (
     <Box>
@@ -77,10 +94,8 @@ const SpecialDutyOfficers = () => {
         <HStack gap={3}>
           <Box bg="#856404" p={2} borderRadius="sm"><Star size={20} color="white" /></Box>
           <Box>
-            <Text fontSize={{ base: '16px', md: '20px' }} fontWeight="700" color="gray.700">
-              स्थानांतरितफोर्स स्टाफ
-            </Text>
-            <Text fontSize="12px" color="gray.500">विशेष ड्यूटी (Special Duty) पर तैनात फोर्स स्टाफ</Text>
+            <Text fontSize={{ base: '16px', md: '20px' }} fontWeight="700" color="gray.700">स्थानांतरित फोर्स स्टाफ</Text>
+            <Text fontSize="12px" color="gray.500">विशेष ड्यूटी (Special Duty) पर तैनात फोर्स स्टाफ (Server-side Pagination)</Text>
           </Box>
         </HStack>
         <HStack gap={2} cursor="pointer" onClick={() => navigate('/dashboard')}
@@ -90,108 +105,103 @@ const SpecialDutyOfficers = () => {
         </HStack>
       </Flex>
 
-      <Flex mb={4}>
+      <Flex justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={3}>
         <Flex border="1px solid" borderColor="gray.300" borderRadius="4px"
           alignItems="center" px={3} bg="white" w={{ base: 'full', sm: '300px' }}>
           <Search size={15} color="#999" />
           <Input border="none" _focus={{ boxShadow: 'none' }} placeholder="नाम या PNO खोजें..."
-            value={search} onChange={(e) => setSearch(e.target.value)} fontSize="14px" h="38px" />
+            value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} fontSize="14px" h="38px" />
         </Flex>
+
+        <HStack gap={2}>
+          <Text fontSize="13px" color="gray.500">दिखाएं:</Text>
+          <select value={limit} onChange={(e) => { setLimit(parseInt(e.target.value)); setPage(1); }} 
+            style={{ padding: '6px 10px', borderRadius: '4px', border: '1.5px solid #e2e8f0', fontSize: '13px', outline: 'none', background: 'white' }}>
+            <option value={12}>12</option>
+            <option value={24}>24</option>
+            <option value={48}>48</option>
+          </select>
+        </HStack>
       </Flex>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <Flex h="300px" align="center" justify="center"><Spinner color="#856404" /></Flex>
+      ) : officers.length === 0 ? (
         <Box bg="white" borderRadius="sm" p={10} textAlign="center" boxShadow="sm">
           <Star size={32} color="#ccc" style={{ margin: '0 auto 8px' }} />
-          <Text color="gray.500" fontWeight="600">कोई स्थानांतरितफोर्स स्टाफ नहीं</Text>
-          <Text color="gray.400" fontSize="13px">कोई भी फोर्स स्टाफ अभी विशेष ड्यूटी पर नहीं है</Text>
+          <Text color="gray.500" fontWeight="600">कोई स्थानांतरित फोर्स स्टाफ नहीं</Text>
         </Box>
       ) : (
-        <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} gap={4}>
-          {filtered.map((item, i) => (
-            <Box key={item.user._id} bg="white" borderRadius="sm" boxShadow="sm" overflow="hidden"
-              borderLeft="4px solid #856404">
-              <Flex bg="#856404" px={4} py={3} justifyContent="space-between" alignItems="center">
-                <HStack gap={2}>
-                  <Box bg="rgba(255,255,255,0.2)" borderRadius="full" w="26px" h="26px"
-                    display="flex" alignItems="center" justifyContent="center">
-                    <Text color="white" fontSize="11px" fontWeight="700">{i + 1}</Text>
-                  </Box>
-                  <Text color="white" fontSize="14px" fontWeight="700" noOfLines={1}>{item.user.name}</Text>
-                </HStack>
-                <Badge bg="white" color="#856404" px={2} py={0.5} borderRadius="full" fontSize="10px">
-                  विशेष ड्यूटी
-                </Badge>
-              </Flex>
-              <Box px={4} py={3}>
-                <VStack gap={2} align="stretch">
-                  <InfoRow icon={Award} label="पदनाम" value={item.user.designation?.name || '—'} />
-                  <Box h="1px" bg="gray.100" />
-                  <InfoRow icon={Hash} label="PNO" value={item.user.pnoNumber} valueColor="#090884" bold />
-                  <Box h="1px" bg="gray.100" />
-                  <InfoRow icon={Phone} label="फोन" value={item.user.phoneNumber} />
-                  <Box h="1px" bg="gray.100" />
-                  <Flex justifyContent="space-between" alignItems="center">
-                    <Text fontSize="11px" color="gray.500">ड्यूटी</Text>
-                    <Text fontSize="12px" fontWeight="600" color="#856404" noOfLines={1} maxW="60%">
-                      {item.duty.title}
-                    </Text>
-                  </Flex>
-                  {item.duty.location && (
-                    <>
-                      <Box h="1px" bg="gray.100" />
-                      <Flex justifyContent="space-between" alignItems="center">
-                        <HStack gap={1} color="gray.500"><MapPin size={12} /><Text fontSize="11px">स्थान</Text></HStack>
-                        <Text fontSize="12px" color="gray.600">{item.duty.location}</Text>
-                      </Flex>
-                    </>
-                  )}
-                  {item.duty.startDate && (
-                    <>
-                      <Box h="1px" bg="gray.100" />
-                      <Flex justifyContent="space-between" alignItems="center">
-                        <HStack gap={1} color="gray.500"><Calendar size={12} /><Text fontSize="11px">शुरू</Text></HStack>
-                        <Text fontSize="12px" color="gray.600">
-                          {new Date(item.duty.startDate).toLocaleDateString('hi-IN')}
-                        </Text>
-                      </Flex>
-                    </>
-                  )}
-                </VStack>
+        <VStack align="stretch" gap={6}>
+          <SimpleGrid columns={{ base: 1, sm: 2, lg: 3, xl: 4 }} gap={4}>
+            {officers.map((u, i) => (
+              <Box key={u._id} bg="white" borderRadius="sm" boxShadow="sm" overflow="hidden"
+                borderLeft="4px solid #856404">
+                <Flex bg="#856404" px={4} py={3} justifyContent="space-between" alignItems="center">
+                  <HStack gap={2}>
+                    <Box bg="rgba(255,255,255,0.2)" borderRadius="full" w="26px" h="26px"
+                      display="flex" alignItems="center" justifyContent="center">
+                      <Text color="white" fontSize="11px" fontWeight="700">{(page - 1) * limit + i + 1}</Text>
+                    </Box>
+                    <Text color="white" fontSize="14px" fontWeight="700" noOfLines={1}>{u.name}</Text>
+                  </HStack>
+                  <Badge bg="white" color="#856404" px={2} py={0.5} borderRadius="full" fontSize="10px">विशेष ड्यूटी</Badge>
+                </Flex>
+                <Box px={4} py={3}>
+                  <VStack gap={2} align="stretch">
+                    <InfoRow icon={Award} label="पदनाम" value={u.designation?.name || '—'} />
+                    <Box h="1px" bg="gray.100" />
+                    <InfoRow icon={Hash} label="PNO" value={u.pnoNumber} valueColor="#090884" bold />
+                    <Box h="1px" bg="gray.100" />
+                    <InfoRow icon={Phone} label="फोन" value={u.phoneNumber || '—'} />
+                    <Box h="1px" bg="gray.100" />
+                    <Flex justifyContent="space-between" alignItems="center">
+                      <Text fontSize="11px" color="gray.500">ड्यूटी</Text>
+                      <Text fontSize="12px" fontWeight="600" color="#856404" noOfLines={1} maxW="60%">{u.activeDuty?.title}</Text>
+                    </Flex>
+                  </VStack>
+                </Box>
+                <Flex borderTop="1px solid" borderColor="gray.100" px={4} py={2} gap={2} flexWrap="wrap">
+                  <Button size="xs" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
+                    onClick={() => openHistory(u._id)} borderRadius="4px" fontSize="11px" flex="1" h="30px">
+                    <History size={11} style={{ marginRight: 3 }} /> इतिहास
+                  </Button>
+                  <Button size="xs" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
+                    onClick={() => { setRemarkText(''); setRemoveConfirm({ open: true, item: u }); }}
+                    borderRadius="4px" fontSize="11px" flex="1" h="30px">
+                    <UserX size={11} style={{ marginRight: 3 }} /> हटाएँ
+                  </Button>
+                  <Button size="xs" bg="#856404" color="white" _hover={{ bg: '#6b4f03' }}
+                    onClick={() => { setRemarkText(''); setCompleteConfirm({ open: true, item: u }); }}
+                    borderRadius="4px" fontSize="11px" flex="1" h="30px">
+                    <CheckCircle size={11} style={{ marginRight: 3 }} /> पूर्ण
+                  </Button>
+                </Flex>
               </Box>
-              <Flex borderTop="1px solid" borderColor="gray.100" px={4} py={2} gap={2} flexWrap="wrap">
-                <Button size="sm" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
-                  onClick={() => openHistory(item.user._id)} borderRadius="4px" fontSize="12px" flex="1">
-                  <History size={12} style={{ marginRight: 4 }} /> इतिहास
-                </Button>
-                <Button size="sm" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
-                  onClick={() => { setRemarkText(''); setRemoveConfirm({ open: true, item }); }}
-                  borderRadius="4px" fontSize="12px" flex="1">
-                  <UserX size={12} style={{ marginRight: 4 }} /> डिलीट
-                </Button>
-                <Button size="sm" bg="#856404" color="white" _hover={{ bg: '#6b4f03' }}
-                  onClick={() => { setRemarkText(''); setCompleteConfirm({ open: true, item }); }}
-                  borderRadius="4px" fontSize="12px" flex="1">
-                  <CheckCircle size={12} style={{ marginRight: 4 }} /> पूर्ण
-                </Button>
-              </Flex>
-            </Box>
-          ))}
-        </SimpleGrid>
-      )}
-      <Box mt={3}><Text fontSize="12px" color="gray.500">कुल {filtered.length} स्थानांतरितफोर्स स्टाफ</Text></Box>
+            ))}
+          </SimpleGrid>
 
-      <ConfirmDialog isOpen={removeConfirm.open}
-        onClose={() => setRemoveConfirm({ open: false, item: null })}
-        onConfirm={handleRemove} loading={saving} type="warning"
-        title="विशेष ड्यूटी से डिलीट"
-        message={`क्या आप "${removeConfirm.item?.user?.name}" को विशेष ड्यूटी "${removeConfirm.item?.duty?.title}" से हटाना चाहते हैं?`}
+          {/* Pagination */}
+          <Flex justifyContent="space-between" alignItems="center" pt={4} borderTop="1px solid" borderColor="gray.100">
+            <Text fontSize="13px" color="gray.500">कुल <b>{totalCount}</b> स्थानांतरित फोर्स स्टाफ</Text>
+            <HStack gap={2}>
+              <Button size="sm" variant="outline" onClick={() => handlePageChange(page - 1)} disabled={page === 1} fontSize="12px">पिछला</Button>
+              <Text fontSize="12px" fontWeight="600">पेज {page} / {totalPages}</Text>
+              <Button size="sm" variant="outline" onClick={() => handlePageChange(page + 1)} disabled={page === totalPages} fontSize="12px">अगला</Button>
+            </HStack>
+          </Flex>
+        </VStack>
+      )}
+
+      {/* Dialogs and Modals (same as before) */}
+      <ConfirmDialog isOpen={removeConfirm.open} onClose={() => setRemoveConfirm({ open: false, item: null })}
+        onConfirm={handleRemove} loading={saving} type="warning" title="विशेष ड्यूटी से डिलीट"
+        message={`क्या आप "${removeConfirm.item?.name}" को विशेष ड्यूटी "${removeConfirm.item?.activeDuty?.title}" से हटाना चाहते हैं?`}
         confirmText="हाँ, डिलीट" cancelText="नहीं, रहने दें" />
 
-      <ConfirmDialog isOpen={completeConfirm.open}
-        onClose={() => setCompleteConfirm({ open: false, item: null })}
-        onConfirm={handleComplete} loading={saving} type="success"
-        title="विशेष ड्यूटी पूर्ण करें"
-        message={`क्या आप पुष्टि करते हैं कि "${completeConfirm.item?.user?.name}" की विशेष ड्यूटी "${completeConfirm.item?.duty?.title}" पूर्ण हो गई?`}
+      <ConfirmDialog isOpen={completeConfirm.open} onClose={() => setCompleteConfirm({ open: false, item: null })}
+        onConfirm={handleComplete} loading={saving} type="success" title="विशेष ड्यूटी पूर्ण करें"
+        message={`क्या आप पुष्टि करते हैं कि "${completeConfirm.item?.name}" की विशेष ड्यूटी "${completeConfirm.item?.activeDuty?.title}" पूर्ण हो गई?`}
         confirmText="हाँ, पूर्ण करें" cancelText="नहीं, रहने दें" />
 
       <Modal isOpen={historyModal} onClose={() => setHistoryModal(false)} title="ड्यूटी इतिहास">
@@ -212,20 +222,13 @@ const SpecialDutyOfficers = () => {
                 </Box>
               ))}
             </SimpleGrid>
-            {historyData.history?.length === 0 ? (
-              <Text color="gray.400" textAlign="center" fontSize="13px">कोई इतिहास नहीं</Text>
-            ) : historyData.history?.map((h) => (
-              <Box key={h._id} p={3} bg="gray.50" borderRadius="sm"
-                borderLeft={`3px solid ${actionColor(h.action)}`}>
+            {historyData.history?.map((h) => (
+              <Box key={h._id} p={3} bg="gray.50" borderRadius="sm" borderLeft={`3px solid ${actionColor(h.action)}`}>
                 <Flex justifyContent="space-between" alignItems="flex-start">
                   <Text fontSize="13px" fontWeight="600" color="gray.700">{h.duty?.title || '—'}</Text>
                   <Badge bg={actionBg(h.action)} color={actionColor(h.action)} px={2} borderRadius="full" fontSize="10px">
                     {actionHindi(h.action)}
                   </Badge>
-                </Flex>
-                <Flex gap={3} mt={1} flexWrap="wrap">
-                  {h.duration && <Text fontSize="11px" color="gray.500">{h.duration} घंटे</Text>}
-                  <Text fontSize="11px" color="gray.400">{new Date(h.createdAt).toLocaleDateString('hi-IN')}</Text>
                 </Flex>
               </Box>
             ))}
@@ -237,20 +240,13 @@ const SpecialDutyOfficers = () => {
 };
 
 const actionHindi = (a) => ({ assigned: 'असाइन', reassigned: 'पुनः असाइन', removed: 'हटाया', completed: 'पूर्ण' }[a] || a);
-const actionColor = (a) => ({ assigned: '#090884', reassigned: '#856404', removed: '#fe0808', completed: '#090884' }[a] || '#666');
-const actionBg = (a) => ({ assigned: '#eeeeff', reassigned: '#fff3cd', removed: '#ffe5e5', completed: '#eeeeff' }[a] || '#f8f9fa');
+const actionColor = (a) => ({ assigned: '#090884', reassigned: '#856404', removed: '#fe0808', completed: '#22c55e' }[a] || '#666');
+const actionBg = (a) => ({ assigned: '#eeeeff', reassigned: '#fff3cd', removed: '#ffe5e5', completed: '#dcfce7' }[a] || '#f8f9fa');
 
 const InfoRow = ({ icon: Icon, label, value, valueColor = 'gray.700', bold = false }) => (
   <Flex justifyContent="space-between" alignItems="center">
     <HStack gap={2} color="gray.500"><Icon size={14} /><Text fontSize="12px">{label}</Text></HStack>
-    <Text fontSize="13px" fontWeight={bold ? '700' : '500'} color={valueColor}
-      fontFamily={bold ? 'monospace' : 'inherit'}>{value}</Text>
-  </Flex>
-);
-
-const Loader = () => (
-  <Flex h="60vh" alignItems="center" justifyContent="center">
-    <VStack><Spinner size="xl" color="#090884" /><Text color="gray.500">लोड हो रहा है...</Text></VStack>
+    <Text fontSize="13px" fontWeight={bold ? '700' : '500'} color={valueColor} fontFamily={bold ? 'monospace' : 'inherit'}>{value}</Text>
   </Flex>
 );
 

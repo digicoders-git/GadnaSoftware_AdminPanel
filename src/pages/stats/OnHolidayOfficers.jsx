@@ -5,14 +5,19 @@ import {
 import { Umbrella, ArrowLeft, Phone, Hash, Calendar, FileText, Search, Pencil, Trash2, History } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { getHolidays, updateHoliday, deleteHoliday, getUserHistory } from '../../api/services';
+import { getUsers, updateHoliday, deleteHoliday, getUserHistory } from '../../api/services';
 import Modal from '../../components/Modal';
 import ConfirmDialog from '../../components/ConfirmDialog';
 
 const OnHolidayOfficers = () => {
-  const [holidays, setHolidays] = useState([]);
+  const [officers, setOfficers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(12);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ startDate: '', endDate: '', reason: '' });
@@ -25,18 +30,32 @@ const OnHolidayOfficers = () => {
   const navigate = useNavigate();
 
   const fetchData = async () => {
+    setLoading(true);
     try {
-      const { data } = await getHolidays('?status=ongoing');
-      setHolidays(data.holidays || []);
+      const queryParams = `?status=onHoliday&page=${page}&limit=${limit}&search=${search}`;
+      const { data } = await getUsers(queryParams);
+      setOfficers(data.users);
+      setTotalPages(data.pages);
+      setTotalCount(data.total);
     } catch { toast.error('डेटा लोड करने में समस्या हुई'); }
     finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [page, limit, search]);
 
-  const openEdit = (h) => {
-    setEditing(h);
-    setForm({ startDate: h.startDate?.slice(0, 10) || '', endDate: h.endDate?.slice(0, 10) || '', reason: h.reason || '' });
+  const openEdit = (u) => {
+    const h = u.currentHoliday;
+    setEditing({ ...h, userId: u._id, name: u.name });
+    setForm({ 
+      startDate: h.startDate?.slice(0, 10) || '', 
+      endDate: h.endDate?.slice(0, 10) || '', 
+      reason: h.reason || '' 
+    });
     setModalOpen(true);
   };
 
@@ -48,19 +67,24 @@ const OnHolidayOfficers = () => {
     try {
       await updateHoliday(editing._id, form);
       toast.success('छुट्टी सफलतापूर्वक अपडेट हो गई');
-      setModalOpen(false); fetchData();
+      setModalOpen(false); 
+      fetchData();
     } catch (err) { toast.error(err.response?.data?.message || 'कुछ गलत हुआ'); }
     finally { setSaving(false); }
   };
 
-  const askDelete = (h) => setDeleteConfirm({ open: true, id: h._id, name: h.user?.name || 'फोर्स स्टाफ' });
+  const askDelete = (u) => {
+    const h = u.currentHoliday;
+    setDeleteConfirm({ open: true, id: h._id, name: u.name });
+  };
 
   const handleDelete = async () => {
     setDeleting(true);
     try {
       await deleteHoliday(deleteConfirm.id);
       toast.success(`${deleteConfirm.name} की छुट्टी डिलीट कर दी गई`);
-      setDeleteConfirm({ open: false, id: null, name: '' }); fetchData();
+      setDeleteConfirm({ open: false, id: null, name: '' }); 
+      fetchData();
     } catch (err) { toast.error(err.response?.data?.message || 'डिलीट करने में समस्या हुई'); }
     finally { setDeleting(false); }
   };
@@ -75,12 +99,9 @@ const OnHolidayOfficers = () => {
     finally { setHistoryLoading(false); }
   };
 
-  const filtered = holidays.filter(h =>
-    h.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
-    h.user?.pnoNumber?.toLowerCase().includes(search.toLowerCase())
-  );
-
-  if (loading) return <Loader />;
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) setPage(newPage);
+  };
 
   return (
     <Box>
@@ -91,7 +112,7 @@ const OnHolidayOfficers = () => {
           <Box bg="#fe0808" p={2} borderRadius="sm"><Umbrella size={20} color="white" /></Box>
           <Box>
             <Text fontSize={{ base: '16px', md: '20px' }} fontWeight="700" color="gray.700">छुट्टी पर फोर्स स्टाफ</Text>
-            <Text fontSize="12px" color="gray.500">वर्तमान में चल रही छुट्टियाँ</Text>
+            <Text fontSize="12px" color="gray.500">वर्तमान में चल रही छुट्टियाँ (Server-side Pagination)</Text>
           </Box>
         </HStack>
         <HStack gap={2} cursor="pointer" onClick={() => navigate('/dashboard')}
@@ -101,71 +122,94 @@ const OnHolidayOfficers = () => {
         </HStack>
       </Flex>
 
-      <Flex mb={4}>
+      <Flex justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={3}>
         <Flex border="1px solid" borderColor="gray.300" borderRadius="4px"
           alignItems="center" px={3} bg="white" w={{ base: 'full', sm: '300px' }}>
           <Search size={15} color="#999" />
           <Input border="none" _focus={{ boxShadow: 'none' }} placeholder="नाम या PNO खोजें..."
-            value={search} onChange={(e) => setSearch(e.target.value)} fontSize="14px" h="38px" />
+            value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} fontSize="14px" h="38px" />
         </Flex>
+
+        <HStack gap={2}>
+          <Text fontSize="13px" color="gray.500">दिखाएं:</Text>
+          <select value={limit} onChange={(e) => { setLimit(parseInt(e.target.value)); setPage(1); }} 
+            style={{ padding: '6px 10px', borderRadius: '4px', border: '1.5px solid #e2e8f0', fontSize: '13px', outline: 'none', background: 'white' }}>
+            <option value={12}>12</option>
+            <option value={24}>24</option>
+            <option value={48}>48</option>
+          </select>
+        </HStack>
       </Flex>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <Flex h="300px" align="center" justify="center"><Spinner color="#fe0808" /></Flex>
+      ) : officers.length === 0 ? (
         <Box bg="white" borderRadius="sm" p={10} textAlign="center" boxShadow="sm">
           <Umbrella size={32} color="#ccc" style={{ margin: '0 auto 8px' }} />
           <Text color="gray.500" fontWeight="600">कोई फोर्स स्टाफ छुट्टी पर नहीं है</Text>
         </Box>
       ) : (
-        <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} gap={4}>
-          {filtered.map((h, i) => (
-            <Box key={h._id} bg="white" borderRadius="sm" boxShadow="sm" overflow="hidden"
-              borderLeft="4px solid #fe0808">
-              <Flex bg="#fe0808" px={4} py={3} justifyContent="space-between" alignItems="center">
-                <HStack gap={2}>
-                  <Box bg="rgba(255,255,255,0.2)" borderRadius="full" w="26px" h="26px"
-                    display="flex" alignItems="center" justifyContent="center">
-                    <Text color="white" fontSize="11px" fontWeight="700">{i + 1}</Text>
-                  </Box>
-                  <Text color="white" fontSize="14px" fontWeight="700" noOfLines={1}>{h.user?.name || '—'}</Text>
-                </HStack>
-                <Badge bg="white" color="#fe0808" px={2} py={0.5} borderRadius="full" fontSize="10px">छुट्टी पर</Badge>
-              </Flex>
-              <Box px={4} py={3}>
-                <VStack gap={2} align="stretch">
-                  <InfoRow icon={Hash} label="PNO" value={h.user?.pnoNumber || '—'} valueColor="#090884" bold />
-                  <Box h="1px" bg="gray.100" />
-                  <InfoRow icon={Phone} label="फोन" value={h.user?.phoneNumber || '—'} />
-                  <Box h="1px" bg="gray.100" />
-                  <InfoRow icon={Calendar} label="शुरू" value={new Date(h.startDate).toLocaleDateString('hi-IN')} />
-                  <Box h="1px" bg="gray.100" />
-                  <InfoRow icon={Calendar} label="समाप्ति" value={new Date(h.endDate).toLocaleDateString('hi-IN')} />
-                  {h.reason && (
-                    <>
-                      <Box h="1px" bg="gray.100" />
-                      <InfoRow icon={FileText} label="कारण" value={h.reason} />
-                    </>
-                  )}
-                </VStack>
+        <VStack align="stretch" gap={6}>
+          <SimpleGrid columns={{ base: 1, sm: 2, lg: 3, xl: 4 }} gap={4}>
+            {officers.map((u, i) => (
+              <Box key={u._id} bg="white" borderRadius="sm" boxShadow="sm" overflow="hidden"
+                borderLeft="4px solid #fe0808">
+                <Flex bg="#fe0808" px={4} py={3} justifyContent="space-between" alignItems="center">
+                  <HStack gap={2}>
+                    <Box bg="rgba(255,255,255,0.2)" borderRadius="full" w="26px" h="26px"
+                      display="flex" alignItems="center" justifyContent="center">
+                      <Text color="white" fontSize="11px" fontWeight="700">{(page - 1) * limit + i + 1}</Text>
+                    </Box>
+                    <Text color="white" fontSize="14px" fontWeight="700" noOfLines={1}>{u.name}</Text>
+                  </HStack>
+                  <Badge bg="white" color="#fe0808" px={2} py={0.5} borderRadius="full" fontSize="10px">छुट्टी पर</Badge>
+                </Flex>
+                <Box px={4} py={3}>
+                  <VStack gap={2} align="stretch">
+                    <InfoRow icon={Hash} label="PNO" value={u.pnoNumber} valueColor="#090884" bold />
+                    <Box h="1px" bg="gray.100" />
+                    <InfoRow icon={Phone} label="फोन" value={u.phoneNumber || '—'} />
+                    <Box h="1px" bg="gray.100" />
+                    <InfoRow icon={Calendar} label="शुरू" value={new Date(u.currentHoliday?.startDate).toLocaleDateString('hi-IN')} />
+                    <Box h="1px" bg="gray.100" />
+                    <InfoRow icon={Calendar} label="समाप्ति" value={new Date(u.currentHoliday?.endDate).toLocaleDateString('hi-IN')} />
+                    {u.currentHoliday?.reason && (
+                      <>
+                        <Box h="1px" bg="gray.100" />
+                        <InfoRow icon={FileText} label="कारण" value={u.currentHoliday.reason} />
+                      </>
+                    )}
+                  </VStack>
+                </Box>
+                <Flex borderTop="1px solid" borderColor="gray.100" px={4} py={2} gap={2} flexWrap="wrap">
+                  <Button size="xs" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
+                    onClick={() => openHistory(u._id)} borderRadius="4px" fontSize="11px" flex="1" h="30px">
+                    <History size={11} style={{ marginRight: 3 }} /> इतिहास
+                  </Button>
+                  <Button size="xs" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
+                    onClick={() => openEdit(u)} borderRadius="4px" fontSize="11px" flex="1" h="30px">
+                    <Pencil size={11} style={{ marginRight: 3 }} /> एडिट
+                  </Button>
+                  <Button size="xs" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
+                    onClick={() => askDelete(u)} borderRadius="4px" fontSize="11px" flex="1" h="30px">
+                    <Trash2 size={11} style={{ marginRight: 3 }} /> डिलीट
+                  </Button>
+                </Flex>
               </Box>
-              <Flex borderTop="1px solid" borderColor="gray.100" px={4} py={2} gap={2} flexWrap="wrap">
-                <Button size="sm" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
-                  onClick={() => openHistory(h.user?._id)} borderRadius="4px" fontSize="12px" flex="1">
-                  <History size={12} style={{ marginRight: 4 }} /> इतिहास
-                </Button>
-                <Button size="sm" bg="#090884" color="white" _hover={{ bg: '#06066e' }}
-                  onClick={() => openEdit(h)} borderRadius="4px" fontSize="12px" flex="1">
-                  <Pencil size={12} style={{ marginRight: 4 }} /> एडिट
-                </Button>
-                <Button size="sm" bg="#fe0808" color="white" _hover={{ bg: '#d10606' }}
-                  onClick={() => askDelete(h)} borderRadius="4px" fontSize="12px" flex="1">
-                  <Trash2 size={12} style={{ marginRight: 4 }} /> डिलीट
-                </Button>
-              </Flex>
-            </Box>
-          ))}
-        </SimpleGrid>
+            ))}
+          </SimpleGrid>
+
+          {/* Pagination */}
+          <Flex justifyContent="space-between" alignItems="center" pt={4} borderTop="1px solid" borderColor="gray.100">
+            <Text fontSize="13px" color="gray.500">कुल <b>{totalCount}</b> फोर्स स्टाफ छुट्टी पर</Text>
+            <HStack gap={2}>
+              <Button size="sm" variant="outline" onClick={() => handlePageChange(page - 1)} disabled={page === 1} fontSize="12px">पिछला</Button>
+              <Text fontSize="12px" fontWeight="600">पेज {page} / {totalPages}</Text>
+              <Button size="sm" variant="outline" onClick={() => handlePageChange(page + 1)} disabled={page === totalPages} fontSize="12px">अगला</Button>
+            </HStack>
+          </Flex>
+        </VStack>
       )}
-      <Box mt={3}><Text fontSize="12px" color="gray.500">कुल {filtered.length} फोर्स स्टाफ छुट्टी पर</Text></Box>
 
       {/* Edit Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="छुट्टी एडिट करें">
@@ -173,8 +217,8 @@ const OnHolidayOfficers = () => {
           <VStack gap={4}>
             <Box w="full" p={3} bg="gray.50" borderRadius="sm" borderLeft="3px solid #fe0808">
               <Text fontSize="12px" color="gray.500">फोर्स स्टाफ:</Text>
-              <Text fontSize="14px" fontWeight="700" color="gray.700">{editing?.user?.name}</Text>
-              <Text fontSize="12px" color="gray.500">{editing?.user?.pnoNumber}</Text>
+              <Text fontSize="14px" fontWeight="700" color="gray.700">{editing?.name}</Text>
+              <Text fontSize="12px" color="gray.500">{editing?.pnoNumber}</Text>
             </Box>
             <FF label="शुरू तारीख *">
               <Input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} required fontSize="14px" />
@@ -242,8 +286,8 @@ const OnHolidayOfficers = () => {
 };
 
 const actionHindi = (a) => ({ assigned: 'असाइन', reassigned: 'पुनः असाइन', removed: 'हटाया', completed: 'पूर्ण' }[a] || a);
-const actionColor = (a) => ({ assigned: '#090884', reassigned: '#856404', removed: '#fe0808', completed: '#090884' }[a] || '#666');
-const actionBg = (a) => ({ assigned: '#eeeeff', reassigned: '#fff3cd', removed: '#ffe5e5', completed: '#eeeeff' }[a] || '#f8f9fa');
+const actionColor = (a) => ({ assigned: '#090884', reassigned: '#856404', removed: '#fe0808', completed: '#22c55e' }[a] || '#666');
+const actionBg = (a) => ({ assigned: '#eeeeff', reassigned: '#fff3cd', removed: '#ffe5e5', completed: '#dcfce7' }[a] || '#f8f9fa');
 
 const InfoRow = ({ icon: Icon, label, value, valueColor = 'gray.700', bold = false }) => (
   <Flex justifyContent="space-between" alignItems="center">
@@ -254,12 +298,6 @@ const InfoRow = ({ icon: Icon, label, value, valueColor = 'gray.700', bold = fal
 
 const FF = ({ label, children }) => (
   <Box w="full"><Text fontSize="13px" color="gray.600" mb={1} fontWeight="500">{label}</Text>{children}</Box>
-);
-
-const Loader = () => (
-  <Flex h="60vh" alignItems="center" justifyContent="center">
-    <VStack><Spinner size="xl" color="#090884" /><Text color="gray.500">लोड हो रहा है...</Text></VStack>
-  </Flex>
 );
 
 export default OnHolidayOfficers;

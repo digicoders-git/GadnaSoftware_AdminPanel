@@ -16,7 +16,7 @@ export const updateDesignation = (id, data) => api.put(`/designations/${id}`, da
 export const deleteDesignation = (id) => api.delete(`/designations/${id}`);
 
 // Users
-export const getUsers = (all = false) => api.get(`/users${all ? '?all=true' : ''}`);
+export const getUsers = (params = '') => api.get(`/users${params}`);
 export const createUser = (data) => api.post('/users', data);
 export const getUserById = (id) => api.get(`/users/${id}`);
 export const updateUser = (id, data) => api.put(`/users/${id}`, data);

@@ -25,6 +25,12 @@ const Officers = () => {
   const [statusMap, setStatusMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: '', designation: '', phoneNumber: '', pnoNumber: '', isActive: true });
@@ -41,14 +47,27 @@ const Officers = () => {
   const [completeConfirm, setCompleteConfirm] = useState({ open: false, duty: null, user: null });
 
   const navigate = useNavigate();
+
   const fetchData = async () => {
+    setLoading(true);
     try {
-      const [uRes, dRes, ovRes, dutiesRes] = await Promise.all([getUsers(true), getDesignations(), getUserStatusOverview(), getDuties()]);
-      setUsers(uRes.data);
-      setDesignations(dRes.data);
-      setDuties(dutiesRes.data);
+      const queryParams = `?all=true&page=${page}&limit=${limit}&search=${search}&status=${statusFilter}`;
+      const [uRes, dRes, ovRes, dutiesRes] = await Promise.all([
+        getUsers(queryParams),
+        getDesignations(),
+        getUserStatusOverview(),
+        getDuties()
+      ]);
+
+      setUsers(uRes.data.users || []);
+      setTotalPages(uRes.data.pages || 1);
+      setTotalCount(uRes.data.total || 0);
+
+      setDesignations(dRes.data || []);
+      setDuties(dutiesRes.data || []);
+
       const map = {};
-      const ov = ovRes.data;
+      const ov = ovRes.data || {};
       (ov.available || []).forEach(u => { map[u._id] = { status: 'available' }; });
       (ov.dutyWise || []).forEach(g => g.users.forEach(item => {
         map[item.user._id] = { status: 'onDuty', duty: item.duty };
@@ -61,18 +80,24 @@ const Officers = () => {
       });
       setStatusMap(map);
     } catch (err) {
+      console.error('FetchData error:', err);
       toast.error('डेटा लोड करने में समस्या हुई');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [page, limit, search, statusFilter]);
 
   const openAdd = () => { setEditing(null); setForm({ name: '', designation: '', phoneNumber: '', pnoNumber: '', isActive: true }); setModalOpen(true); };
   const openEdit = (u) => {
     setEditing(u);
-    setForm({ name: u.name, designation: u.designation?._id || u.designation, phoneNumber: u.phoneNumber, pnoNumber: u.pnoNumber, isActive: u.isActive });
+    setForm({ name: u.name, designation: u.designation?._id || u.designation, phoneNumber: u.phoneNumber || '', pnoNumber: u.pnoNumber, isActive: u.isActive });
     setModalOpen(true);
   };
 
@@ -81,7 +106,8 @@ const Officers = () => {
     if (!form.name.trim()) { toast.error('कृपया फोर्स स्टाफ का नाम दर्ज करें'); return; }
     if (!form.designation) { toast.error('कृपया पदनाम चुनें'); return; }
     if (!form.pnoNumber.trim()) { toast.error('कृपया PNO नंबर दर्ज करें'); return; }
-    if (!form.phoneNumber.trim() || form.phoneNumber.length < 10) { toast.error('कृपया सही फोन नंबर दर्ज करें (10 अंक)'); return; }
+    if (form.phoneNumber && form.phoneNumber.trim().length < 10) { toast.error('कृपया सही फोन नंबर दर्ज करें (10 अंक)'); return; }
+    
     setSaving(true);
     try {
       if (editing) {
@@ -206,25 +232,56 @@ const Officers = () => {
     }
   };
 
-  const filtered = users.filter(
-    (u) => u.name?.toLowerCase().includes(search.toLowerCase()) ||
-      u.pnoNumber?.toLowerCase().includes(search.toLowerCase()) ||
-      u.phoneNumber?.includes(search)
-  );
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
+    }
+  };
 
-  if (loading) return <LoadingSpinner />;
+  const handleLimitChange = (e) => {
+    setLimit(parseInt(e.target.value));
+    setPage(1);
+  };
 
   return (
     <Box>
       <PageHeader title="फोर्स स्टाफ प्रबंधन" subtitle="सभी पुलिस फोर्स स्टाफ की सूची" icon={Users} />
 
       <Flex justifyContent="space-between" alignItems="center" mb={4} flexWrap="wrap" gap={3}>
-        <Flex border="1px solid" borderColor="gray.300" borderRadius="4px"
-          alignItems="center" px={3} bg="white" w={{ base: 'full', sm: '280px' }}>
-          <Search size={15} color="#999" />
-          <Input border="none" _focus={{ boxShadow: 'none' }} placeholder="नाम, PNO या फोन खोजें..."
-            value={search} onChange={(e) => setSearch(e.target.value)} fontSize="14px" h="38px" />
-        </Flex>
+        <HStack gap={3} w={{ base: 'full', sm: 'auto' }} flexWrap="wrap">
+          <Flex border="1px solid" borderColor="gray.300" borderRadius="4px"
+            alignItems="center" px={3} bg="white" w={{ base: 'full', sm: '260px' }}
+            _focusWithin={{ borderColor: '#090884', boxShadow: '0 0 0 1px #090884' }}>
+            <Search size={15} color="#999" />
+            <Input border="none" 
+              outline="none"
+              _focus={{ boxShadow: 'none', outline: 'none' }} 
+              placeholder="नाम, PNO, फोन या पदनाम..."
+              value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} fontSize="14px" h="38px" />
+          </Flex>
+          
+          <HStack gap={2}>
+            <Text fontSize="13px" color="gray.500" whiteSpace="nowrap">स्थिति:</Text>
+            <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} 
+              style={{ padding: '8px 12px', borderRadius: '4px', border: '1.5px solid #e2e8f0', fontSize: '13px', outline: 'none', background: 'white', minWidth: '130px' }}>
+              <option value="">सभी स्थिति</option>
+              <option value="available">✔ उपलब्ध (Available)</option>
+              <option value="onDuty">● ड्यूटी पर (On Duty)</option>
+              <option value="onHoliday">☂ छुट्टी पर (On Holiday)</option>
+            </select>
+          </HStack>
+
+          <HStack gap={2} display={{ base: 'none', lg: 'flex' }}>
+            <Text fontSize="13px" color="gray.500" whiteSpace="nowrap">दिखाएं:</Text>
+            <select value={limit} onChange={handleLimitChange} 
+              style={{ padding: '8px 12px', borderRadius: '4px', border: '1.5px solid #e2e8f0', fontSize: '13px', outline: 'none', background: 'white' }}>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </HStack>
+        </HStack>
         <Button bg="#090884" color="white" _hover={{ bg: '#06066e' }} onClick={openAdd}
           fontSize="14px" h="40px" borderRadius="6px" px={5}
           w={{ base: 'full', sm: 'auto' }}>
@@ -244,21 +301,25 @@ const Officers = () => {
               </Table.Row>
             </Table.Header>
             <Table.Body>
-              {filtered.length === 0 ? (
+              {loading ? (
                 <Table.Row>
-                  <Table.Cell colSpan={7} textAlign="center" py={10} color="gray.400">कोई फोर्स स्टाफ नहीं मिला</Table.Cell>
+                  <Table.Cell colSpan={8} textAlign="center" py={10}><Spinner size="sm" color="#090884" mr={2} /> लोड हो रहा है...</Table.Cell>
                 </Table.Row>
-              ) : filtered.map((u, i) => {
+              ) : (users || []).length === 0 ? (
+                <Table.Row>
+                  <Table.Cell colSpan={8} textAlign="center" py={10} color="gray.400">कोई फोर्स स्टाफ नहीं मिला</Table.Cell>
+                </Table.Row>
+              ) : users.map((u, i) => {
                 const st = statusMap[u._id];
                 return (
                 <Table.Row key={u._id} _hover={{ bg: 'gray.50' }}>
-                  <Table.Cell px={4} py={3} fontSize="13px" color="gray.500">{i + 1}</Table.Cell>
+                  <Table.Cell px={4} py={3} fontSize="13px" color="gray.500">{(page - 1) * limit + i + 1}</Table.Cell>
                   <Table.Cell px={4} py={3}><Text fontSize="14px" fontWeight="600" color="gray.700">{u.name}</Text></Table.Cell>
                   <Table.Cell px={4} py={3}><Text fontSize="13px" color="gray.600">{u.designation?.name || '—'}</Text></Table.Cell>
                   <Table.Cell px={4} py={3}><Text fontSize="13px" fontFamily="monospace" color="#090884" fontWeight="600">{u.pnoNumber}</Text></Table.Cell>
-                  <Table.Cell px={4} py={3}><Text fontSize="13px" color="gray.600">{u.phoneNumber}</Text></Table.Cell>
+                  <Table.Cell px={4} py={3}><Text fontSize="13px" color="gray.600">{u.phoneNumber || '—'}</Text></Table.Cell>
                   <Table.Cell px={4} py={3}>
-                    <DutyStatusCell st={st} navigate={navigate} onDutyAssign={() => openDutyAssign(u)} onHolidayAssign={() => openHolidayAssign(u)} onComplete={() => askComplete(u, st.duty)} />
+                    <DutyStatusCell st={st} navigate={navigate} onDutyAssign={() => openDutyAssign(u)} onHolidayAssign={() => openHolidayAssign(u)} onComplete={() => askComplete(u, st?.duty)} />
                   </Table.Cell>
                   <Table.Cell px={4} py={3}>
                     <Badge bg={u.isActive ? '#eeeeff' : '#f8d7da'} color={u.isActive ? '#090884' : '#721c24'}
@@ -285,25 +346,70 @@ const Officers = () => {
             </Table.Body>
           </Table.Root>
         </Box>
-        <Box px={4} py={2} bg="gray.50" borderTop="1px solid" borderColor="gray.100">
-          <Text fontSize="12px" color="gray.500">
-            कुल {filtered.length} फोर्स स्टाफ
-            {filtered.filter(u => !u.isActive).length > 0 && (
-              <> &nbsp;•&nbsp; <span style={{color:'#721c24'}}>{filtered.filter(u => !u.isActive).length} निष्क्रिय</span></>
-            )}
+        
+        <Flex px={4} py={3} bg="gray.50" borderTop="1px solid" borderColor="gray.100" 
+          justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={4}>
+          <Text fontSize="13px" color="gray.600">
+            कुल <b>{totalCount}</b> में से <b>{(page - 1) * limit + 1} - {Math.min(page * limit, totalCount)}</b> दिखा रहे हैं
           </Text>
-        </Box>
+          
+          <HStack gap={2}>
+            <Button size="sm" variant="outline" onClick={() => handlePageChange(page - 1)} disabled={page === 1}
+              fontSize="12px" h="32px" borderRadius="4px" borderColor="gray.300">
+              पिछला
+            </Button>
+            
+            <HStack gap={1}>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) pageNum = i + 1;
+                else if (page <= 3) pageNum = i + 1;
+                else if (page >= totalPages - 2) pageNum = totalPages - 4 + i;
+                else pageNum = page - 2 + i;
+                
+                return (
+                  <Button key={pageNum} size="sm" 
+                    bg={page === pageNum ? '#090884' : 'white'} 
+                    color={page === pageNum ? 'white' : 'gray.700'}
+                    border="1px solid" borderColor={page === pageNum ? '#090884' : 'gray.300'}
+                    _hover={{ bg: page === pageNum ? '#090884' : 'gray.100' }}
+                    onClick={() => handlePageChange(pageNum)}
+                    minW="32px" h="32px" fontSize="12px" borderRadius="4px">
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </HStack>
+
+            <Button size="sm" variant="outline" onClick={() => handlePageChange(page + 1)} disabled={page === totalPages}
+              fontSize="12px" h="32px" borderRadius="4px" borderColor="gray.300">
+              अगला
+            </Button>
+          </HStack>
+        </Flex>
       </Box>
 
       {/* Mobile Card View */}
       <Box display={{ base: 'block', md: 'none' }}>
-        {filtered.length === 0 ? (
+        <HStack mb={3} gap={2}>
+          <Text fontSize="13px" color="gray.500">दिखाएं:</Text>
+          <select value={limit} onChange={handleLimitChange} 
+            style={{ padding: '2px 8px', borderRadius: '4px', border: '1.5px solid #e2e8f0', fontSize: '13px', outline: 'none', background: 'white' }}>
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+        </HStack>
+
+        {loading ? (
+          <Flex py={10} justify="center"><Spinner color="#090884" /></Flex>
+        ) : (users || []).length === 0 ? (
           <Box bg="white" borderRadius="sm" p={8} textAlign="center" boxShadow="sm">
             <Text color="gray.400">कोई फोर्स स्टाफ नहीं मिला</Text>
           </Box>
         ) : (
           <VStack gap={3} align="stretch">
-            {filtered.map((u, i) => {
+            {users.map((u, i) => {
               const st = statusMap[u._id];
               return (
               <Box key={u._id} bg="white" borderRadius="sm" boxShadow="sm" overflow="hidden">
@@ -311,7 +417,7 @@ const Officers = () => {
                   <HStack gap={2}>
                     <Box bg="rgba(255,255,255,0.2)" borderRadius="full" w="28px" h="28px"
                       display="flex" alignItems="center" justifyContent="center">
-                      <Text color="white" fontSize="12px" fontWeight="700">{i + 1}</Text>
+                      <Text color="white" fontSize="12px" fontWeight="700">{(page - 1) * limit + i + 1}</Text>
                     </Box>
                     <Text color="white" fontSize="15px" fontWeight="700" noOfLines={1}>{u.name}</Text>
                   </HStack>
@@ -329,7 +435,7 @@ const Officers = () => {
                     <Box h="1px" bg="gray.100" />
                     <InfoRow icon={Hash} label="PNO नंबर" value={u.pnoNumber} valueColor="#090884" bold />
                     <Box h="1px" bg="gray.100" />
-                    <InfoRow icon={Phone} label="फोन" value={u.phoneNumber} />
+                    <InfoRow icon={Phone} label="फोन" value={u.phoneNumber || '—'} />
                     <Box h="1px" bg="gray.100" />
                     <Box>
                       <HStack gap={2} color="gray.500" mb={2}>
@@ -337,7 +443,7 @@ const Officers = () => {
                         <Text fontSize="12px" fontWeight="600">ड्यूटी स्थिति</Text>
                       </HStack>
                       <Box pl={1}>
-                        <DutyStatusCell st={st} navigate={navigate} compact onDutyAssign={() => openDutyAssign(u)} onHolidayAssign={() => openHolidayAssign(u)} onComplete={() => askComplete(u, st.duty)} />
+                        <DutyStatusCell st={st} navigate={navigate} compact onDutyAssign={() => openDutyAssign(u)} onHolidayAssign={() => openHolidayAssign(u)} onComplete={() => askComplete(u, st?.duty)} />
                       </Box>
                     </Box>
                   </VStack>
@@ -359,17 +465,16 @@ const Officers = () => {
             })}
           </VStack>
         )}
-        <Box mt={3}>
-          <Text fontSize="12px" color="gray.500">
-            कुल {filtered.length} फोर्स स्टाफ
-            {filtered.filter(u => !u.isActive).length > 0 && (
-              <> &nbsp;•&nbsp; <span style={{color:'#721c24'}}>{filtered.filter(u => !u.isActive).length} निष्क्रिय</span></>
-            )}
-          </Text>
-        </Box>
+        
+        <Flex mt={4} justifyContent="space-between" alignItems="center">
+          <Button size="sm" variant="outline" onClick={() => handlePageChange(page - 1)} disabled={page === 1}
+            fontSize="12px" bg="white">पिछला</Button>
+          <Text fontSize="12px" color="gray.600">पेज {page} / {totalPages}</Text>
+          <Button size="sm" variant="outline" onClick={() => handlePageChange(page + 1)} disabled={page === totalPages}
+            fontSize="12px" bg="white">अगला</Button>
+        </Flex>
       </Box>
 
-      {/* Add/Edit Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}
         title={editing ? `फोर्स स्टाफ एडिट करें — ${editing.name}` : 'नया फोर्स स्टाफ जोड़ें'}>
         <form onSubmit={handleSave}>
@@ -397,9 +502,9 @@ const Officers = () => {
                 _focus={{ borderColor: '#090884', bg: 'white', boxShadow: '0 0 0 3px rgba(9,8,132,0.08)', outline: 'none' }}
                 transition="all 0.2s" />
             </FF>
-            <FF label="फोन नंबर *">
+            <FF label="फोन नंबर">
               <Input placeholder="जैसे: 9876543210" value={form.phoneNumber}
-                onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })} required
+                onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })}
                 fontSize="14px" h="48px" borderRadius="8px" border="1.5px solid" borderColor="gray.200"
                 bg="gray.50" px={4}
                 _focus={{ borderColor: '#090884', bg: 'white', boxShadow: '0 0 0 3px rgba(9,8,132,0.08)', outline: 'none' }}
@@ -445,7 +550,6 @@ const Officers = () => {
         cancelText="नहीं, रहने दें"
       />
 
-      {/* Duty Assign Modal */}
       <Modal isOpen={dutyAssignModal} onClose={() => setDutyAssignModal(false)}
         title={`ड्यूटी असाइन करें — ${selectedUser?.name}`}>
         <form onSubmit={handleDutyAssign}>
@@ -505,7 +609,6 @@ const Officers = () => {
         </form>
       </Modal>
 
-      {/* Holiday Assign Modal */}
       <Modal isOpen={holidayAssignModal} onClose={() => setHolidayAssignModal(false)}
         title={`छुट्टी असाइन करें — ${selectedUser?.name}`}>
         <form onSubmit={handleHolidayAssign}>

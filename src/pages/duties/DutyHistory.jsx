@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
-  Box, Flex, Text, Button, VStack, HStack, Badge, Table, Spinner, SimpleGrid,
+  Box, Flex, Text, Button, VStack, HStack, Badge, Table, Spinner, SimpleGrid, Input,
 } from '@chakra-ui/react';
-import { History, Clock, CheckCircle, XCircle, ClipboardList, MapPin, User } from 'lucide-react';
+import { History, Clock, CheckCircle, XCircle, ClipboardList, MapPin, User, Search, Hash, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getAllHistory, getUserHistory, getUsers } from '../../api/services';
 import PageHeader from '../../components/PageHeader';
@@ -13,13 +13,17 @@ const DutyHistory = () => {
   const [selectedUser, setSelectedUser] = useState('');
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Search states
+  const [search, setSearch] = useState(''); // Main search for history list
+  const [userSearch, setUserSearch] = useState(''); // Search for officer in filter
 
   useEffect(() => {
     const init = async () => {
       try {
-        const [hRes, uRes] = await Promise.all([getAllHistory(), getUsers()]);
+        const [hRes, uRes] = await Promise.all([getAllHistory(), getUsers('?all=true&pagination=false')]);
         setHistory(hRes.data);
-        setUsers(uRes.data);
+        setUsers(uRes.data.users);
       } catch {
         toast.error('इतिहास लोड करने में समस्या हुई');
       } finally {
@@ -31,6 +35,7 @@ const DutyHistory = () => {
 
   const handleUserFilter = async (userId) => {
     setSelectedUser(userId);
+    setSearch(''); // Clear main search when filtering by user
     if (!userId) {
       setStats(null);
       setLoading(true);
@@ -53,34 +58,76 @@ const DutyHistory = () => {
     }
   };
 
+  // Filter history based on main search
+  const filteredHistory = history.filter(h => {
+    if (!search) return true;
+    const s = search.toLowerCase();
+    return (
+      h.duty?.title?.toLowerCase().includes(s) ||
+      h.user?.name?.toLowerCase().includes(s) ||
+      h.user?.pnoNumber?.toLowerCase().includes(s) ||
+      h.remarks?.toLowerCase().includes(s)
+    );
+  });
+
+  // Filter users for selection dropdown
+  const filteredUsers = users.filter(u => 
+    u.name?.toLowerCase().includes(userSearch.toLowerCase()) ||
+    u.pnoNumber?.toLowerCase().includes(userSearch.toLowerCase())
+  );
+
   return (
     <Box>
       <PageHeader title="ड्यूटी इतिहास" subtitle="सभी फोर्स स्टाफ का ड्यूटी रिकॉर्ड" icon={History} />
 
-      {/* Filter */}
-      <Box bg="white" borderRadius="sm" boxShadow="sm" p={4} mb={4}>
-        <Text fontSize="13px" color="gray.600" mb={2} fontWeight="600">फोर्स स्टाफ अनुसार फ़िल्टर करें</Text>
-        <Flex gap={3} flexWrap="wrap" alignItems="center">
-          <select
-            value={selectedUser}
-            onChange={(e) => handleUserFilter(e.target.value)}
-            style={{
-              padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '4px',
-              fontSize: '14px', flex: 1, minWidth: '200px', background: 'white', outline: 'none',
-            }}
-          >
-            <option value="">-- सभी फोर्स स्टाफ --</option>
-            {users.map(u => (
-              <option key={u._id} value={u._id}>{u.name} ({u.pnoNumber})</option>
-            ))}
-          </select>
-          {selectedUser && (
-            <Button size="sm" variant="outline" onClick={() => handleUserFilter('')} fontSize="13px">
-              फ़िल्टर डिलीट ✕
-            </Button>
-          )}
-        </Flex>
-      </Box>
+      {/* Filters Section */}
+      <SimpleGrid columns={{ base: 1, md: 2 }} gap={4} mb={5}>
+        {/* Officer Selection Filter */}
+        <Box bg="white" borderRadius="sm" boxShadow="sm" p={4}>
+          <Text fontSize="13px" color="gray.600" mb={2} fontWeight="600">फोर्स स्टाफ अनुसार फ़िल्टर करें</Text>
+          <VStack align="stretch" gap={2}>
+            {/* User Search inside filter */}
+            <Flex border="1px solid" borderColor="gray.200" borderRadius="6px" alignItems="center" px={3} bg="gray.50">
+              <Search size={14} color="#999" />
+              <Input border="none" outline="none" _focus={{ boxShadow: 'none' }}
+                placeholder="स्टाफ का नाम या PNO टाइप करें..."
+                value={userSearch} onChange={(e) => setUserSearch(e.target.value)} fontSize="13px" h="34px" />
+            </Flex>
+            
+            <Flex gap={2}>
+              <select
+                value={selectedUser}
+                onChange={(e) => handleUserFilter(e.target.value)}
+                style={selectStyle}
+              >
+                <option value="">-- सभी फोर्स स्टाफ ({filteredUsers.length}) --</option>
+                {filteredUsers.map(u => (
+                  <option key={u._id} value={u._id}>{u.name} ({u.pnoNumber})</option>
+                ))}
+              </select>
+              {selectedUser && (
+                <Button size="sm" variant="ghost" color="red.500" onClick={() => handleUserFilter('')} fontSize="12px">
+                  साफ़ करें ✕
+                </Button>
+              )}
+            </Flex>
+          </VStack>
+        </Box>
+
+        {/* Dynamic List Search */}
+        <Box bg="white" borderRadius="sm" boxShadow="sm" p={4}>
+          <Text fontSize="13px" color="gray.600" mb={2} fontWeight="600">लिस्ट में खोजें (ड्यूटी, नाम, PNO)</Text>
+          <VStack align="stretch" gap={2} h="full" justify="center">
+            <Flex border="1px solid" borderColor="gray.300" borderRadius="6px" alignItems="center" px={3} bg="white"
+              _focusWithin={{ borderColor: '#090884', boxShadow: '0 0 0 1px #090884' }}>
+              <Search size={16} color="#999" />
+              <Input border="none" outline="none" _focus={{ boxShadow: 'none' }}
+                placeholder="यहाँ टाइप करें..."
+                value={search} onChange={(e) => setSearch(e.target.value)} fontSize="14px" h="42px" />
+            </Flex>
+          </VStack>
+        </Box>
+      </SimpleGrid>
 
       {/* Stats when user selected */}
       {stats && (
@@ -131,12 +178,12 @@ const DutyHistory = () => {
                   </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                  {history.length === 0 ? (
+                  {filteredHistory.length === 0 ? (
                     <Table.Row>
-                      <Table.Cell colSpan={7} textAlign="center" py={10} color="gray.400">कोई इतिहास नहीं मिला</Table.Cell>
+                      <Table.Cell colSpan={8} textAlign="center" py={10} color="gray.400">कोई इतिहास नहीं मिला</Table.Cell>
                     </Table.Row>
                   ) : (
-                    history.map((h, i) => (
+                    filteredHistory.map((h, i) => (
                       <Table.Row key={h._id} _hover={{ bg: 'gray.50' }}>
                         <Table.Cell px={4} py={3} fontSize="13px" color="gray.500">{i + 1}</Table.Cell>
                         <Table.Cell px={4} py={3}>
@@ -178,19 +225,19 @@ const DutyHistory = () => {
               </Table.Root>
             </Box>
             <Box px={4} py={2} bg="gray.50" borderTop="1px solid" borderColor="gray.100">
-              <Text fontSize="12px" color="gray.500">कुल {history.length} रिकॉर्ड</Text>
+              <Text fontSize="12px" color="gray.500">कुल {filteredHistory.length} रिकॉर्ड</Text>
             </Box>
           </Box>
 
           {/* Mobile Card View */}
           <Box display={{ base: 'block', lg: 'none' }}>
-            {history.length === 0 ? (
+            {filteredHistory.length === 0 ? (
               <Box bg="white" borderRadius="sm" p={8} textAlign="center" boxShadow="sm">
                 <Text color="gray.400">कोई इतिहास नहीं मिला</Text>
               </Box>
             ) : (
               <VStack gap={3} align="stretch">
-                {history.map((h, i) => (
+                {filteredHistory.map((h, i) => (
                   <Box key={h._id} bg="white" borderRadius="sm" boxShadow="sm" overflow="hidden">
                     {/* Header */}
                     <Flex px={4} py={3} justifyContent="space-between" alignItems="center"
@@ -208,10 +255,7 @@ const DutyHistory = () => {
                     <Box px={4} py={3}>
                       <VStack gap={2} align="stretch">
                         <Flex justifyContent="space-between">
-                          <HStack gap={2} color="gray.500">
-                            <User size={13} />
-                            <Text fontSize="12px">फोर्स स्टाफ</Text>
-                          </HStack>
+                          <HStack gap={2} color="gray.500"><User size={13} /><Text fontSize="12px">फोर्स स्टाफ</Text></HStack>
                           <Box textAlign="right">
                             <Text fontSize="13px" fontWeight="700" color="#090884">{h.user?.name || '—'}</Text>
                             <Text fontSize="11px" color="gray.400">{h.user?.pnoNumber}</Text>
@@ -233,41 +277,16 @@ const DutyHistory = () => {
                         </Flex>
                         <Box h="1px" bg="gray.100" />
                         <Flex justifyContent="space-between" alignItems="center">
-                          <HStack gap={2} color="gray.500">
-                            <Clock size={13} />
-                            <Text fontSize="12px">कुल अवधि</Text>
-                          </HStack>
-                          <Text fontSize="13px" color="#090884" fontWeight="700">
-                            {h.duration ? `${h.duration} घंटे` : '—'}
-                          </Text>
+                          <HStack gap={2} color="gray.500"><Clock size={13} /><Text fontSize="12px">कुल अवधि</Text></HStack>
+                          <Text fontSize="13px" color="#090884" fontWeight="700">{h.duration ? `${h.duration} घंटे` : '—'}</Text>
                         </Flex>
-                        {h.remarks && (
-                          <>
-                            <Box h="1px" bg="gray.100" />
-                            <Box>
-                              <Text fontSize="11px" color="gray.500" mb={0.5}>टिप्पणी</Text>
-                              <Text fontSize="12px" color="gray.600">{h.remarks}</Text>
-                            </Box>
-                          </>
-                        )}
-                        {h.previousUser && (
-                          <>
-                            <Box h="1px" bg="gray.100" />
-                            <Flex justifyContent="space-between">
-                              <Text fontSize="12px" color="gray.500">पिछला फोर्स स्टाफ</Text>
-                              <Text fontSize="12px" color="orange.500" fontWeight="500">{h.previousUser?.name}</Text>
-                            </Flex>
-                          </>
-                        )}
                       </VStack>
                     </Box>
                   </Box>
                 ))}
               </VStack>
             )}
-            <Box mt={3} px={1}>
-              <Text fontSize="12px" color="gray.500">कुल {history.length} रिकॉर्ड</Text>
-            </Box>
+            <Box mt={3} px={1}><Text fontSize="12px" color="gray.500">कुल {filteredHistory.length} रिकॉर्ड</Text></Box>
           </Box>
         </>
       )}
@@ -277,9 +296,7 @@ const DutyHistory = () => {
 
 const StatBox = ({ icon: Icon, label, value, color }) => (
   <Flex bg="white" borderRadius="sm" boxShadow="sm" p={3} alignItems="center" gap={3}>
-    <Box bg={color} p={2} borderRadius="sm" flexShrink={0}>
-      <Icon size={16} color="white" />
-    </Box>
+    <Box bg={color} p={2} borderRadius="sm" flexShrink={0}><Icon size={16} color="white" /></Box>
     <Box minW={0}>
       <Text fontSize="11px" color="gray.500" noOfLines={1}>{label}</Text>
       <Text fontSize="18px" fontWeight="700" color="gray.700">{value}</Text>
@@ -287,11 +304,12 @@ const StatBox = ({ icon: Icon, label, value, color }) => (
   </Flex>
 );
 
-const dutyTypeHindi = (type) => ({
-  patrol: 'गश्त', guard: 'पहरा', investigation: 'जांच',
-  traffic: 'यातायात', special: 'विशेष', other: 'अन्य',
-}[type] || type);
+const selectStyle = {
+  width: '100%', padding: '8px 12px', border: '1.5px solid #e2e8f0',
+  borderRadius: '6px', fontSize: '14px', outline: 'none', background: 'white',
+};
 
+const dutyTypeHindi = (type) => ({ patrol: 'गश्त', guard: 'पहरा', investigation: 'जांच', traffic: 'यातायात', special: 'विशेष', other: 'अन्य' }[type] || type);
 const actionHindi = (a) => ({ assigned: 'असाइन', reassigned: 'पुनः असाइन', removed: 'हटाया', completed: 'पूर्ण' }[a] || a);
 const actionColor = (a) => ({
   assigned: { bg: '#eeeeff', color: '#090884' },
@@ -301,5 +319,3 @@ const actionColor = (a) => ({
 }[a] || { bg: '#f8f9fa', color: '#6c757d' });
 
 export default DutyHistory;
-
-
