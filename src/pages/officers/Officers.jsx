@@ -192,7 +192,10 @@ const Officers = () => {
   const handleComplete = async () => {
     setSaving(true);
     try {
-      await completeDuty(completeConfirm.duty.dutyId, { remarks: 'Officers पेज से पूर्ण की गई' });
+      await completeDuty(completeConfirm.duty.dutyId, { 
+        remarks: 'Officers पेज से पूर्ण की गई',
+        userId: completeConfirm.user._id 
+      });
       toast.success(`${completeConfirm.user.name} की ड्यूटी पूर्ण हो गई`);
       setCompleteConfirm({ open: false, duty: null, user: null });
       fetchData();

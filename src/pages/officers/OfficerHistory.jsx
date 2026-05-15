@@ -196,16 +196,26 @@ const OfficerHistory = () => {
                       </>
                     )}
 
-                    {h.endDate && (
+                    {h.endDate ? (
                       <>
                         <Box h="1px" bg="gray.100" />
                         <Flex justifyContent="space-between" alignItems="center">
                           <HStack gap={2} color="gray.500"><Calendar size={13} /><Text fontSize="12px">समाप्त</Text></HStack>
-                          <Text fontSize="13px" color="gray.700">
-                            {new Date(h.endDate).toLocaleString('hi-IN')}
+                          <Text fontSize="13px" color="gray.700" fontWeight="600">
+                            {new Date(h.endDate).toLocaleString('hi-IN', { dateStyle: 'short', timeStyle: 'short' })}
                           </Text>
                         </Flex>
                       </>
+                    ) : (
+                      h.action === 'assigned' && (
+                        <>
+                          <Box h="1px" bg="gray.100" />
+                          <Flex justifyContent="space-between" alignItems="center">
+                            <HStack gap={2} color="gray.500"><Clock size={13} /><Text fontSize="12px">स्थिति</Text></HStack>
+                            <Badge colorScheme="blue" variant="solid" fontSize="10px">सक्रिय (On Duty)</Badge>
+                          </Flex>
+                        </>
+                      )
                     )}
 
                     {h.duration != null && (

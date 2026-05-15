@@ -106,7 +106,13 @@ const Sidebar = ({ isOpen, onClose }) => {
       </Flex>
 
       {/* Nav Items */}
-      <VStack spacing={0} align="stretch" flex="1" mt={1} overflowY="auto">
+      <VStack spacing={0} align="stretch" flex="1" mt={1} overflowY="auto"
+        css={{
+          '&::-webkit-scrollbar': { display: 'none' },
+          'msOverflowStyle': 'none',
+          'scrollbarWidth': 'none',
+        }}
+      >
         {NAV_ITEMS.filter(item => !item.role || item.role === admin?.role).map(({ to, icon: Icon, label }) => (
           <NavLink key={to} to={to} style={{ textDecoration: 'none' }} onClick={handleNavClick}>
             {({ isActive }) => (

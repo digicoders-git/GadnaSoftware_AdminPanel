@@ -124,8 +124,9 @@ const DutyHistory = () => {
                     <Table.ColumnHeader px={4} py={3} fontSize="12px" color="gray.600" fontWeight="700">ड्यूटी</Table.ColumnHeader>
                     <Table.ColumnHeader px={4} py={3} fontSize="12px" color="gray.600" fontWeight="700">फोर्स स्टाफ</Table.ColumnHeader>
                     <Table.ColumnHeader px={4} py={3} fontSize="12px" color="gray.600" fontWeight="700">कार्रवाई</Table.ColumnHeader>
+                    <Table.ColumnHeader px={4} py={3} fontSize="12px" color="gray.600" fontWeight="700">शुरू (Date/Time)</Table.ColumnHeader>
+                    <Table.ColumnHeader px={4} py={3} fontSize="12px" color="gray.600" fontWeight="700">समाप्त (Date/Time)</Table.ColumnHeader>
                     <Table.ColumnHeader px={4} py={3} fontSize="12px" color="gray.600" fontWeight="700">अवधि</Table.ColumnHeader>
-                    <Table.ColumnHeader px={4} py={3} fontSize="12px" color="gray.600" fontWeight="700">तारीख</Table.ColumnHeader>
                     <Table.ColumnHeader px={4} py={3} fontSize="12px" color="gray.600" fontWeight="700">टिप्पणी</Table.ColumnHeader>
                   </Table.Row>
                 </Table.Header>
@@ -153,15 +154,22 @@ const DutyHistory = () => {
                           </Badge>
                         </Table.Cell>
                         <Table.Cell px={4} py={3}>
-                          <Text fontSize="13px" color="gray.600">{h.duration ? `${h.duration} घंटे` : '—'}</Text>
-                        </Table.Cell>
-                        <Table.Cell px={4} py={3}>
-                          <Text fontSize="12px" color="gray.500">
-                            {new Date(h.createdAt).toLocaleDateString('hi-IN')}
+                          <Text fontSize="12px" color="gray.600">
+                            {h.startDate ? new Date(h.startDate).toLocaleString('hi-IN', { dateStyle: 'short', timeStyle: 'short' }) : '—'}
                           </Text>
                         </Table.Cell>
                         <Table.Cell px={4} py={3}>
-                          <Text fontSize="12px" color="gray.500">{h.remarks || '—'}</Text>
+                          <Text fontSize="12px" color="gray.600">
+                            {h.endDate ? new Date(h.endDate).toLocaleString('hi-IN', { dateStyle: 'short', timeStyle: 'short' }) : (h.action === 'assigned' ? 'सक्रिय...' : '—')}
+                          </Text>
+                        </Table.Cell>
+                        <Table.Cell px={4} py={3}>
+                          <Text fontSize="13px" fontWeight="600" color={h.duration ? "#090884" : "gray.400"}>
+                            {h.duration ? `${h.duration} घंटे` : '—'}
+                          </Text>
+                        </Table.Cell>
+                        <Table.Cell px={4} py={3}>
+                          <Text fontSize="12px" color="gray.500" noOfLines={2}>{h.remarks || '—'}</Text>
                         </Table.Cell>
                       </Table.Row>
                     ))
@@ -210,20 +218,27 @@ const DutyHistory = () => {
                           </Box>
                         </Flex>
                         <Box h="1px" bg="gray.100" />
-                        <Flex justifyContent="space-between">
-                          <HStack gap={2} color="gray.500">
-                            <Clock size={13} />
-                            <Text fontSize="12px">अवधि</Text>
-                          </HStack>
-                          <Text fontSize="13px" color="gray.700" fontWeight="500">
-                            {h.duration ? `${h.duration} घंटे` : '—'}
+                        <Flex justifyContent="space-between" alignItems="center">
+                          <Text fontSize="12px" color="gray.500">शुरू</Text>
+                          <Text fontSize="12px" color="gray.700" fontWeight="600">
+                            {h.startDate ? new Date(h.startDate).toLocaleString('hi-IN', { dateStyle: 'short', timeStyle: 'short' }) : '—'}
                           </Text>
                         </Flex>
                         <Box h="1px" bg="gray.100" />
-                        <Flex justifyContent="space-between">
-                          <Text fontSize="12px" color="gray.500">तारीख</Text>
-                          <Text fontSize="12px" color="gray.600">
-                            {new Date(h.createdAt).toLocaleDateString('hi-IN')}
+                        <Flex justifyContent="space-between" alignItems="center">
+                          <Text fontSize="12px" color="gray.500">समाप्त</Text>
+                          <Text fontSize="12px" color={h.endDate ? "gray.700" : "blue.500"} fontWeight="600">
+                            {h.endDate ? new Date(h.endDate).toLocaleString('hi-IN', { dateStyle: 'short', timeStyle: 'short' }) : (h.action === 'assigned' ? 'सक्रिय' : '—')}
+                          </Text>
+                        </Flex>
+                        <Box h="1px" bg="gray.100" />
+                        <Flex justifyContent="space-between" alignItems="center">
+                          <HStack gap={2} color="gray.500">
+                            <Clock size={13} />
+                            <Text fontSize="12px">कुल अवधि</Text>
+                          </HStack>
+                          <Text fontSize="13px" color="#090884" fontWeight="700">
+                            {h.duration ? `${h.duration} घंटे` : '—'}
                           </Text>
                         </Flex>
                         {h.remarks && (
