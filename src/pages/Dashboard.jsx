@@ -139,8 +139,8 @@ const Dashboard = () => {
 
       {/* Stat Cards */}
       <SimpleGrid columns={{ base: 2, md: 3, lg: 5 }} gap={{ base: 3, md: 4 }} mb={5}>
-        <StatCard icon={Users} label="कुल सक्रिय" value={overview?.totalUsers || 0} color="#090884" onClick={() => navigate('/stats/active-officers')} />
-        <StatCard icon={UserCheck} label="उपलब्ध" value={summary.available || 0} color="#090884" onClick={() => navigate('/stats/available')} />
+        <StatCard icon={Users} label="टोटल फोर्स" value={overview?.totalUsers || 0} color="#090884" onClick={() => navigate('/stats/active-officers')} />
+        <StatCard icon={UserCheck} label="कुल उपलब्ध" value={summary.available || 0} color="#090884" onClick={() => navigate('/stats/available')} />
         <StatCard icon={MapPin} label="ड्यूटी पर" value={summary.onDuty || 0} color="#fe0808" onClick={() => navigate('/stats/on-duty')} />
         <StatCard icon={Star} label="स्थानांतरित" value={summary.deputed || 0} color="#856404" onClick={() => navigate('/stats/deputed')} />
         <StatCard icon={Umbrella} label="छुट्टी पर" value={summary.onHoliday || 0} color="#fe0808" onClick={() => navigate('/stats/on-holiday')} />

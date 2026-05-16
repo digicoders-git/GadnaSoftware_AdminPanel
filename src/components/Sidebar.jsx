@@ -56,9 +56,10 @@ const Sidebar = ({ isOpen, onClose }) => {
       {/* Logo Section */}
       <Flex
         px={4}
-        py={3}
+        py={3.5}
         alignItems="center"
-        justifyContent="center"
+        justifyContent="flex-start"
+        gap={3}
         bg="rgba(0,0,0,0.2)"
         borderBottom="1px solid rgba(255,255,255,0.15)"
       >
@@ -67,22 +68,22 @@ const Sidebar = ({ isOpen, onClose }) => {
           display="flex"
           alignItems="center"
           justifyContent="center"
+          flexShrink={0}
         >
           <Box
             position="absolute"
-            w="64px" h="64px"
+            w="54px" h="54px"
             borderRadius="full"
             bg="linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%)"
             opacity="0.3"
-            filter="blur(8px)"
+            filter="blur(6px)"
           />
           <Box
             position="relative"
-            w="56px" h="56px"
+            w="48px" h="48px"
             borderRadius="full"
             bg="linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%)"
-            p="3px"
-            flexShrink={0}
+            p="2.5px"
           >
             <Box
               w="full" h="full"
@@ -103,6 +104,10 @@ const Sidebar = ({ isOpen, onClose }) => {
             </Box>
           </Box>
         </Box>
+        <VStack align="flex-start" spacing={0} overflow="hidden" minW={0}>
+          <Text color="white" fontSize="15px" fontWeight="700" whiteSpace="nowrap" textOverflow="ellipsis">सीतापुर पुलिस लाइन</Text>
+          <Text color="#FFD700" fontSize="11px" fontWeight="600" letterSpacing="0.5px">उत्तर प्रदेश पुलिस</Text>
+        </VStack>
       </Flex>
 
       {/* Nav Items */}

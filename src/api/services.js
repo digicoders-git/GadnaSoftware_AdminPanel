@@ -34,6 +34,8 @@ export const deleteDuty = (id) => api.delete(`/duties/${id}`);
 export const assignDuty = (id, data) => api.post(`/duties/${id}/assign`, data);
 export const removeDutyAssignment = (id, data) => api.post(`/duties/${id}/remove`, data);
 export const completeDuty = (id, data) => api.post(`/duties/${id}/complete`, data);
+export const getDutyTypes = () => api.get('/duties/types');
+export const createDutyType = (data) => api.post('/duties/types', data);
 
 // Duty History
 export const getAllHistory = () => api.get('/duty-history');

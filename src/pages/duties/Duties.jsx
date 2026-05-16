@@ -10,12 +10,13 @@ import toast from 'react-hot-toast';
 import {
   getDuties, createDuty, updateDuty, deleteDuty,
   assignDuty, removeDutyAssignment, completeDuty, getUnassignedUsers,
+  getDutyTypes, createDutyType
 } from '../../api/services';
 import PageHeader from '../../components/PageHeader';
 import Modal from '../../components/Modal';
 import ConfirmDialog from '../../components/ConfirmDialog';
 
-const DUTY_TYPES = [
+const INITIAL_DUTY_TYPES = [
   { value: 'patrol', label: 'गश्त (Patrol)' },
   { value: 'guard', label: 'पहरा (Guard)' },
   { value: 'investigation', label: 'जांच (Investigation)' },
@@ -24,11 +25,12 @@ const DUTY_TYPES = [
   { value: 'other', label: 'अन्य (Other)' },
 ];
 
-const emptyForm = { title: '', description: '', location: '' };
+const emptyForm = { title: '', description: '', location: '', dutyType: 'patrol' };
 const emptyAssignForm = { userId: '', dutyType: 'patrol', startDate: '', endDate: '', remarks: '' };
 
 const Duties = () => {
   const [duties, setDuties] = useState([]);
+  const [dutyTypes, setDutyTypes] = useState(INITIAL_DUTY_TYPES);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -43,6 +45,11 @@ const Duties = () => {
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null, title: '' });
   const [deleting, setDeleting] = useState(false);
 
+  // For adding new duty type
+  const [showNewTypeInput, setShowNewTypeInput] = useState(false);
+  const [newTypeName, setNewTypeName] = useState('');
+  const [addingType, setAddingType] = useState(false);
+
   const [completeConfirm, setCompleteConfirm] = useState({ open: false, duty: null });
 
   const fetchDuties = async () => {
@@ -51,19 +58,59 @@ const Duties = () => {
       setDuties(data);
     } catch {
       toast.error('ड्यूटी लोड करने में समस्या हुई');
+    }
+  };
+
+  const fetchAllData = async () => {
+    try {
+      const [dutiesRes, typesRes] = await Promise.all([
+        getDuties(),
+        getDutyTypes()
+      ]);
+      setDuties(dutiesRes.data);
+      
+      const dynamicTypes = typesRes.data.map(t => ({ value: t.name, label: t.name }));
+      const mergedTypes = [...INITIAL_DUTY_TYPES];
+      dynamicTypes.forEach(dt => {
+        if (!mergedTypes.find(mt => mt.value === dt.value)) {
+          mergedTypes.push(dt);
+        }
+      });
+      setDutyTypes(mergedTypes);
+    } catch {
+      toast.error('डेटा लोड करने में समस्या हुई');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchDuties(); }, []);
+  useEffect(() => { fetchAllData(); }, []);
 
   const openAdd = () => { setEditing(null); setForm(emptyForm); setModalOpen(true); };
 
   const openEdit = (d) => {
     setEditing(d);
-    setForm({ title: d.title, description: d.description || '', location: d.location || '' });
+    setForm({ title: d.title, description: d.description || '', location: d.location || '', dutyType: d.dutyType || 'patrol' });
     setModalOpen(true);
+  };
+
+  const handleAddNewType = async () => {
+    if (!newTypeName.trim()) return;
+    setAddingType(true);
+    try {
+      const { data } = await createDutyType({ name: newTypeName });
+      const newOption = { value: data.name, label: data.name };
+      setDutyTypes([...dutyTypes, newOption]);
+      setForm({ ...form, dutyType: data.name });
+      setAssignForm({ ...assignForm, dutyType: data.name });
+      setNewTypeName('');
+      setShowNewTypeInput(false);
+      toast.success('नया प्रकार जोड़ा गया');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'नया प्रकार जोड़ने में समस्या हुई');
+    } finally {
+      setAddingType(false);
+    }
   };
 
   const openAssign = async (duty) => {
@@ -213,7 +260,7 @@ const Duties = () => {
                       <Badge bg={d.dutyType === 'special' ? '#fff3cd' : '#eeeeff'}
                         color={d.dutyType === 'special' ? '#856404' : '#090884'}
                         px={2} py={1} borderRadius="full" fontSize="11px">
-                        {d.dutyType ? `${d.dutyType === 'special' ? '★ ' : ''}${DUTY_TYPES.find(t => t.value === d.dutyType)?.label || d.dutyType}` : '—'}
+                        {d.dutyType ? `${d.dutyType === 'special' ? '★ ' : ''}${dutyTypes.find(t => t.value === d.dutyType)?.label || d.dutyType}` : '—'}
                       </Badge>
                     </Table.Cell>
                     <Table.Cell px={4} py={3}>
@@ -300,7 +347,7 @@ const Duties = () => {
                       </HStack>
                       {d.dutyType ? (
                         <Badge bg="#eeeeff" color="#090884" px={2} py={0.5} borderRadius="full" fontSize="11px">
-                          {DUTY_TYPES.find(t => t.value === d.dutyType)?.label || d.dutyType}
+                          {dutyTypes.find(t => t.value === d.dutyType)?.label || d.dutyType}
                         </Badge>
                       ) : (
                         <Text fontSize="12px" color="gray.400" fontStyle="italic">असाइन नहीं</Text>
@@ -417,6 +464,26 @@ const Duties = () => {
                 _focus={{ borderColor: '#090884', bg: 'white', boxShadow: '0 0 0 3px rgba(9,8,132,0.08)', outline: 'none' }}
                 transition="all 0.2s" />
             </FF>
+            <FF label="ड्यूटी प्रकार *">
+              <HStack gap={2}>
+                <select value={form.dutyType}
+                  onChange={(e) => setForm({ ...form, dutyType: e.target.value })}
+                  required style={{ flex: 1, height: '48px', padding: '0 12px', border: '1.5px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', outline: 'none', background: '#f7f8fa' }}>
+                  {dutyTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+                <Button type="button" onClick={() => setShowNewTypeInput(!showNewTypeInput)} bg="gray.100" color="gray.600" _hover={{ bg: 'gray.200' }} h="48px" px={4} borderRadius="8px" flexShrink={0} title="नया प्रकार जोड़ें">
+                  <Plus size={18} />
+                </Button>
+              </HStack>
+              {showNewTypeInput && (
+                <HStack mt={2} p={3} bg="gray.50" border="1px solid" borderColor="gray.200" borderRadius="8px">
+                  <Input placeholder="नये प्रकार का नाम (जैसे: चुनाव)..." value={newTypeName} onChange={(e) => setNewTypeName(e.target.value)} size="sm" h="38px" borderRadius="6px" bg="white" />
+                  <Button type="button" onClick={handleAddNewType} loading={addingType} bg="#090884" color="white" _hover={{ bg: '#06066e' }} size="sm" h="38px" borderRadius="6px" px={4} flexShrink={0}>
+                    सेव करें
+                  </Button>
+                </HStack>
+              )}
+            </FF>
             <Flex gap={3} w="full" pt={2}
               flexDirection={{ base: 'column', sm: 'row' }}
               justifyContent={{ base: 'stretch', sm: 'flex-end' }}>
@@ -479,11 +546,24 @@ const Duties = () => {
               )}
             </FF>
             <FF label="ड्यूटी प्रकार *">
-              <select value={assignForm.dutyType}
-                onChange={(e) => setAssignForm({ ...assignForm, dutyType: e.target.value })}
-                required style={{ width: '100%', height: '48px', padding: '0 12px', border: '1.5px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', outline: 'none', background: '#f7f8fa' }}>
-                {DUTY_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
+              <HStack gap={2}>
+                <select value={assignForm.dutyType}
+                  onChange={(e) => setAssignForm({ ...assignForm, dutyType: e.target.value })}
+                  required style={{ flex: 1, height: '48px', padding: '0 12px', border: '1.5px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', outline: 'none', background: '#f7f8fa' }}>
+                  {dutyTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+                <Button type="button" onClick={() => setShowNewTypeInput(!showNewTypeInput)} bg="gray.100" color="gray.600" _hover={{ bg: 'gray.200' }} h="48px" px={4} borderRadius="8px" flexShrink={0} title="नया प्रकार जोड़ें">
+                  <Plus size={18} />
+                </Button>
+              </HStack>
+              {showNewTypeInput && (
+                <HStack mt={2} p={3} bg="gray.50" border="1px solid" borderColor="gray.200" borderRadius="8px">
+                  <Input placeholder="नये प्रकार का नाम (जैसे: चुनाव)..." value={newTypeName} onChange={(e) => setNewTypeName(e.target.value)} size="sm" h="38px" borderRadius="6px" bg="white" />
+                  <Button type="button" onClick={handleAddNewType} loading={addingType} bg="#090884" color="white" _hover={{ bg: '#06066e' }} size="sm" h="38px" borderRadius="6px" px={4} flexShrink={0}>
+                    सेव करें
+                  </Button>
+                </HStack>
+              )}
             </FF>
             <FF label="शुरू तारीख *">
               <Input type="datetime-local" value={assignForm.startDate}

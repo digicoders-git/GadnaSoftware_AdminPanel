@@ -4,7 +4,7 @@ import {
 } from '@chakra-ui/react';
 import { MapPin, ArrowLeft, Phone, Hash, Award, UserX, CheckCircle, History, Search, ClipboardList } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getUsers, removeDutyAssignment, completeDuty, getUserHistory } from '../../api/services';
 import Modal from '../../components/Modal';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -31,11 +31,14 @@ const OnDutyOfficers = () => {
   const [historyData, setHistoryData] = useState(null);
   const [historyLoading, setHistoryLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryParamsRaw = new URLSearchParams(location.search);
+  const dutyTypeFilter = queryParamsRaw.get('type') || '';
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const queryParams = `?status=onDuty&page=${page}&limit=${limit}&search=${search}`;
+      const queryParams = `?status=onDuty&page=${page}&limit=${limit}&search=${search}${dutyTypeFilter ? `&dutyType=${dutyTypeFilter}` : ''}`;
       const { data } = await getUsers(queryParams);
       setOfficers(data.users);
       setTotalPages(data.pages);
@@ -49,7 +52,7 @@ const OnDutyOfficers = () => {
       fetchData();
     }, 500);
     return () => clearTimeout(timer);
-  }, [page, limit, search]);
+  }, [page, limit, search, dutyTypeFilter]);
 
   const handleRemove = async () => {
     setSaving(true);
@@ -151,7 +154,7 @@ const OnDutyOfficers = () => {
                     <Text color="white" fontSize="14px" fontWeight="700" noOfLines={1}>{u.name}</Text>
                   </HStack>
                   <Badge bg="white" color="#fe0808" px={2} py={0.5} borderRadius="full" fontSize="10px">
-                    {DUTY_TYPE_HINDI[u.activeDuty?.dutyType] || u.activeDuty?.dutyType}
+                    {DUTY_TYPE_HINDI[u.activeDuty?.assignment?.dutyType || u.activeDuty?.dutyType] || (u.activeDuty?.assignment?.dutyType || u.activeDuty?.dutyType)}
                   </Badge>
                 </Flex>
                 <Box px={4} py={3}>

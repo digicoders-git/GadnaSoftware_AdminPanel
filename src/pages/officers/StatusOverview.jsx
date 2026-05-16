@@ -43,11 +43,13 @@ const StatusOverview = () => {
   const fetchTabData = async (tab, page) => {
     setTabData(prev => ({ ...prev, [tab]: { ...prev[tab], loading: true } }));
     try {
-      let status = tab;
-      if (tab === 'duty') status = 'onDuty';
-      if (tab === 'holiday') status = 'onHoliday';
+      let queryParams = `?page=${page}&limit=${limit}`;
+      if (tab === 'duty') queryParams += '&status=onDuty';
+      else if (tab === 'holiday') queryParams += '&status=onHoliday';
+      else if (tab === 'deputed') queryParams += '&status=onDuty&dutyType=special';
+      else if (tab === 'available') queryParams += '&status=available';
       
-      const { data } = await getUsers(`?status=${status}&page=${page}&limit=${limit}`);
+      const { data } = await getUsers(queryParams);
       
       setTabData(prev => ({
         ...prev,
